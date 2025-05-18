@@ -173,7 +173,8 @@ fun AppNavigation(
             drawerState = drawerState,
             drawerContent = {
                 DrawerContent(
-                    onCloseClick = { scope.launch { drawerState.close() } }
+                    onCloseClick = { scope.launch { drawerState.close() } },
+                    isDrawerOpen = drawerState.isOpen // przekazuj stan otwarcia drawer'a
                 )
             }
         ) {

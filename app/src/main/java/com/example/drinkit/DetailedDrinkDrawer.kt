@@ -10,6 +10,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +20,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,6 +32,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,21 +48,14 @@ fun DetailedDrinkDrawer(
     val configuration = LocalConfiguration.current
     val screenWidth = with(LocalDensity.current) { configuration.screenWidthDp.dp }
     val density = LocalDensity.current
-    
-    // Zapamiętaj offset dla gestów przeciągnięcia
-    var offsetX by remember { mutableStateOf(0f) }
-    
-    // Wartość progowa do zamknięcia szuflady (25% szerokości ekranu)
-    val dismissThreshold = screenWidth * 0.25f
 
-    // Animacja pozycji szuflady
+    var offsetX by remember { mutableStateOf(0f) }
+    val dismissThreshold = screenWidth * 0.25f
     val position by animateDpAsState(
         targetValue = if (isOpen) 0.dp else screenWidth,
         animationSpec = tween(durationMillis = 300),
         label = "drawerPosition"
     )
-
-    // Efekt który wywołuje onClose gdy dragging przekroczy próg
     LaunchedEffect(offsetX) {
         if (offsetX > dismissThreshold.value) {
             onClose()
@@ -64,14 +63,26 @@ fun DetailedDrinkDrawer(
         }
     }
 
-    // Drawer nakładający się na cały ekran, włącznie z paskiem statusu i paskiem nawigacji
+    // --- GWIAZDKA: obsługa ulubionych ---
+    val context = LocalContext.current
+    var isFavourite by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    // Sprawdź czy drink jest w ulubionych
+    LaunchedEffect(cocktail.idDrink) {
+        isFavourite = withContext(Dispatchers.IO) {
+            val db = AppDatabase.getDatabase(context)
+            db.favouriteDao().isFavourite(cocktail.idDrink)
+        }
+    }
+    // --- KONIEC GWIAZDKI ---
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .zIndex(10f) // Upewniamy się, że drawer jest na wierzchu
+            .zIndex(10f)
     ) {
         if (isOpen) {
-            // Przezroczyste tło pod szufladą
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -79,8 +90,7 @@ fun DetailedDrinkDrawer(
                     .zIndex(11f)
             )
         }
-        
-        // Właściwa szuflada
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -96,7 +106,7 @@ fun DetailedDrinkDrawer(
                         },
                         onDragCancel = { offsetX = 0f },
                         onHorizontalDrag = { _, dragAmount ->
-                            if (dragAmount > 0) {  // Tylko w prawo
+                            if (dragAmount > 0) {
                                 offsetX += dragAmount
                             }
                         }
@@ -110,7 +120,7 @@ fun DetailedDrinkDrawer(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Pasek górny z przyciskiem zamykania
+                    // Pasek górny z przyciskiem zamykania i gwiazdką
                     TopAppBar(
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.background
@@ -137,10 +147,46 @@ fun DetailedDrinkDrawer(
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontSize = 22.sp
                             )
+                        },
+                        actions = {
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        val db = AppDatabase.getDatabase(context)
+                                        if (isFavourite) {
+                                            withContext(Dispatchers.IO) {
+                                                db.favouriteDao().delete(
+                                                    FavouriteEntity(
+                                                        idDrink = cocktail.idDrink,
+                                                        drinkName = cocktail.strDrink
+                                                    )
+                                                )
+                                            }
+                                            isFavourite = false
+                                        } else {
+                                            withContext(Dispatchers.IO) {
+                                                db.favouriteDao().insert(
+                                                    FavouriteEntity(
+                                                        idDrink = cocktail.idDrink,
+                                                        drinkName = cocktail.strDrink
+                                                    )
+                                                )
+                                            }
+                                            isFavourite = true
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (isFavourite) Icons.Filled.Star else Icons.Outlined.Star,
+                                    contentDescription = if (isFavourite) "Usuń z ulubionych" else "Dodaj do ulubionych",
+                                    tint = if (isFavourite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+                                )
+                            }
                         }
                     )
-                    
-                    // Szczegóły drinka
+
+                    // --- Szczegóły drinka ---
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -148,177 +194,64 @@ fun DetailedDrinkDrawer(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        val painter = rememberAsyncImagePainter(
-                            model = cocktail.strDrinkThumb,
-                            error = painterResource(android.R.drawable.ic_menu_report_image),
-                            placeholder = painterResource(android.R.drawable.ic_menu_gallery)
-                        )
-                        // Zdjęcie drinka z zaokrąglonymi rogami
+                        // Obrazek drinka
                         Image(
-                            painter = painter,
+                            painter = rememberAsyncImagePainter(cocktail.strDrinkThumb),
                             contentDescription = cocktail.strDrink,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .clip(RoundedCornerShape(16.dp)),
+                                .size(200.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp)),
                             contentScale = ContentScale.Crop
                         )
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Badge'e z informacjami typu, kategorii i szkła
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            // Badge dla typu (alkoholowy/niealkoholowy)
-                            Badge(
-                                icon = Icons.Default.LocalBar,
-                                text = cocktail.strAlcoholic ?: "Unknown"
-                            )
-                            
-                            // Badge dla kategorii
-                            Badge(
-                                icon = Icons.Default.Category,
-                                text = cocktail.strCategory ?: "Unknown"
-                            )
-                            
-                            // Badge dla szkła
-                            Badge(
-                                icon = Icons.Default.WineBar,
-                                text = cocktail.strGlass ?: "Unknown"
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = cocktail.strDrink,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = cocktail.strCategory ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Typ: ${cocktail.strAlcoholic ?: ""}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Szkło: ${cocktail.strGlass ?: ""}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Składniki:",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        cocktail.getIngredientsMeasures().forEach { (ingredient, measure) ->
+                            Text(
+                                text = "- $ingredient${if (!measure.isNullOrBlank()) " (${measure})" else ""}",
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Sekcja ze składnikami - teraz z tym samym tłem co badge
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)  // To samo tło co badge
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(
-                                    text = "Ingredients",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(bottom = 12.dp)
-                                )
-                                
-                                // Lista składników z miarami
-                                val ingredients = cocktail.getIngredientsMeasures()
-                                ingredients.forEachIndexed { index, (ingredient, measure) ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 6.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        // Ingredient name with bullet point
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                            Text(
-                                                text = "•",
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(end = 8.dp)
-                                            )
-                                            Text(
-                                                text = ingredient,
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                color = MaterialTheme.colorScheme.onBackground
-                                            )
-                                        }
-                                        
-                                        // Measure (if available)
-                                        if (!measure.isNullOrBlank()) {
-                                            Text(
-                                                text = measure,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                                                fontWeight = FontWeight.Bold,
-                                                textAlign = TextAlign.End
-                                            )
-                                        }
-                                    }
-                                    
-                                    // Add divider except for the last item
-                                    if (index < ingredients.size - 1) {
-                                        Divider(
-                                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f),
-                                            modifier = Modifier.padding(vertical = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Sekcja z instrukcją przygotowania - teraz z tym samym tłem co badge
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)  // To samo tło co badge
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(
-                                    text = "Instructions",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(bottom = 12.dp)
-                                )
-                                
-                                Text(
-                                    text = cocktail.strInstructions ?: "No instructions available.",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Instrukcje:",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = cocktail.strInstructions ?: "",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun Badge(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
-    Surface(
-        shape = RoundedCornerShape(50.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-        modifier = Modifier.padding(horizontal = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
         }
     }
 }

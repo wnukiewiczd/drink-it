@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.livedata.observeAsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import android.content.Context
@@ -23,7 +22,7 @@ fun DrawerTopBar(onCloseClick: () -> Unit) {
             IconButton(onClick = onCloseClick) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Zamknij menu"
+                    contentDescription = "Close favourtites drawer",
                 )
             }
         },
@@ -36,17 +35,22 @@ fun DrawerTopBar(onCloseClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DrawerContent(onCloseClick: () -> Unit) {
+fun DrawerContent(
+    onCloseClick: () -> Unit,
+    isDrawerOpen: Boolean // dodaj parametr
+) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     var favourites by remember { mutableStateOf<List<FavouriteEntity>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Pobierz ulubione drinki z bazy danych Room
-    LaunchedEffect(Unit) {
-        scope.launch(Dispatchers.IO) {
-            val db = AppDatabase.getDatabase(context)
-            val favs = db.favouriteDao().getAll()
+    // Odświeżaj listę za każdym razem, gdy drawer jest otwierany
+    LaunchedEffect(isDrawerOpen) {
+        if (isDrawerOpen) {
+            isLoading = true
+            val favs = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                val db = AppDatabase.getDatabase(context)
+                db.favouriteDao().getAll()
+            }
             favourites = favs
             isLoading = false
         }
@@ -66,16 +70,11 @@ fun DrawerContent(onCloseClick: () -> Unit) {
         ) {
             DrawerTopBar(onCloseClick = onCloseClick)
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Ulubione drinki:",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-            )
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.padding(16.dp))
             } else if (favourites.isEmpty()) {
                 Text(
-                    text = "Brak ulubionych drinków.",
+                    text = "You have no favourite drinks.",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(16.dp)
                 )
