@@ -83,13 +83,22 @@ fun DrawerContent(
             } else {
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     favourites.forEach { fav ->
-                        Text(
-                            text = fav.drinkName,
-                            style = MaterialTheme.typography.bodyLarge,
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            shape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
                             modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(vertical = 4.dp)
-                                .clickable { onFavouriteClick(fav.idDrink) } // obsługa kliknięcia
-                        )
+                                .clickable { onFavouriteClick(fav.idDrink) }
+                        ) {
+                            Text(
+                                text = fav.drinkName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                            )
+                        }
                     }
                 }
             }
