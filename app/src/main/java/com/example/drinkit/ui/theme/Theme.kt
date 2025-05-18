@@ -14,18 +14,20 @@ import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
     primary = Blue80,
-    secondary = BlueGrey80,
+    secondary = SecondaryBlueDark,  // zaktualizowany secondary - turkusowy
     tertiary = BlueAccent80,
     onPrimary = Color.White,
-    background = DarkBackground,      // zmieniono na bardzo ciemny
-    onBackground = DarkOnBackground   // jasny, kontrastowy tekst
+    onSecondary = OnSecondaryDark,  // zaktualizowany na czarny dla wysokiego kontrastu
+    background = DarkBackground,
+    onBackground = DarkOnBackground
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Blue80,
-    secondary = BlueGrey80,
+    secondary = SecondaryBlue,     // zaktualizowany secondary - turkusowy
     tertiary = BlueAccent80,
     onPrimary = Color.White,
+    onSecondary = OnSecondaryLight,  // zaktualizowany na czarny dla wysokiego kontrastu
     background = Color.White,
     onBackground = Navy
 )

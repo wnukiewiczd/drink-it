@@ -59,6 +59,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.ui.zIndex
 import com.example.drinkit.SettingsScreen
 import com.example.drinkit.ThemeMode
 import com.example.drinkit.DrawerTopBar
@@ -166,68 +167,70 @@ fun AppNavigation(
         }
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            Surface(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(0.75f),
-                color = MaterialTheme.colorScheme.background,
-                shape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp), // zaokrąglenie prawej krawędzi
-                shadowElevation = 8.dp
-            ) {
-                Column(
+    Box(modifier = Modifier.fillMaxSize()) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                Surface(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.75f),
+                    color = MaterialTheme.colorScheme.background,
+                    shape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp), // zaokrąglenie prawej krawędzi
+                    shadowElevation = 8.dp
                 ) {
-                    DrawerTopBar(onCloseClick = { scope.launch { drawerState.close() } })
-                    // Możesz dodać tu kolejne elementy szuflady poniżej paska
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        DrawerTopBar(onCloseClick = { scope.launch { drawerState.close() } })
+                        // Możesz dodać tu kolejne elementy szuflady poniżej paska
+                    }
                 }
             }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    onMenuClick = { scope.launch { drawerState.open() } },
-                    title = items[pagerState.currentPage]
-                )
-            },
-            bottomBar = {
-                BottomNavBar(
-                    navController = navController,
-                    currentIndex = pagerState.currentPage,
-                    onTabSelected = onTabSelected
-                )
-            }
-        ) { innerPadding ->
-            HorizontalPager(
-                count = items.size,
-                state = pagerState,
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-            ) { page ->
-                Box(modifier = Modifier.fillMaxSize()) {
-                    when (items[page]) {
-                        "Settings" -> SettingsScreen(
-                            themeMode = currentThemeMode,
-                            onThemeChange = {
-                                currentThemeMode = it
-                                onThemeChange?.invoke(it)
-                            }
-                        )
-                        "Countdown" -> CountdownScreen()
-                        "Home" -> HomeScreen(
-                            onExploreClick = { onTabSelected(3) },
-                            onFindClick = { onTabSelected(4) }
-                        )
-                        "Explore" -> ExploreScreen(
-                            selectedLetter = selectedLetter,
-                            onLetterSelected = { selectedLetter = it }
-                        )
-                        "Find" -> FindScreen(resetSignal = findScreenResetSignal)
+        ) {
+            Scaffold(
+                topBar = {
+                    AppTopBar(
+                        onMenuClick = { scope.launch { drawerState.open() } },
+                        title = items[pagerState.currentPage]
+                    )
+                },
+                bottomBar = {
+                    BottomNavBar(
+                        navController = navController,
+                        currentIndex = pagerState.currentPage,
+                        onTabSelected = onTabSelected
+                    )
+                }
+            ) { innerPadding ->
+                HorizontalPager(
+                    count = items.size,
+                    state = pagerState,
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                ) { page ->
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        when (items[page]) {
+                            "Settings" -> SettingsScreen(
+                                themeMode = currentThemeMode,
+                                onThemeChange = {
+                                    currentThemeMode = it
+                                    onThemeChange?.invoke(it)
+                                }
+                            )
+                            "Countdown" -> CountdownScreen()
+                            "Home" -> HomeScreen(
+                                onExploreClick = { onTabSelected(3) },
+                                onFindClick = { onTabSelected(4) }
+                            )
+                            "Explore" -> ExploreScreen(
+                                selectedLetter = selectedLetter,
+                                onLetterSelected = { selectedLetter = it }
+                            )
+                            "Find" -> FindScreen(resetSignal = findScreenResetSignal)
+                        }
                     }
                 }
             }

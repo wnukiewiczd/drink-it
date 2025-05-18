@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
@@ -42,7 +43,11 @@ fun FindScreen(resetSignal: Int) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val coroutineScope = rememberCoroutineScope() // Dodano coroutineScope
+    val coroutineScope = rememberCoroutineScope()
+
+    // Stan do obsługi szczegółów drinka
+    var selectedCocktail by remember { mutableStateOf<Cocktail?>(null) }
+    var isDrawerOpen by remember { mutableStateOf(false) }
 
     // Resetuj stan po zmianie resetSignal
     LaunchedEffect(resetSignal) {
@@ -62,12 +67,12 @@ fun FindScreen(resetSignal: Int) {
             keyboardController?.hide()
             focusManager.clearFocus()
 
-            coroutineScope.launch { // Uruchamiamy coroutine w rememberCoroutineScope
+            coroutineScope.launch {
                 try {
                     val response = ApiClient.api.getCocktailsByName(query.text)
                     cocktails = response.drinks ?: emptyList()
                 } catch (e: Exception) {
-                    errorMessage = "Błąd podczas wyszukiwania"
+                    errorMessage = "Error while searching"
                 } finally {
                     isLoading = false
                 }
@@ -180,7 +185,7 @@ fun FindScreen(resetSignal: Int) {
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Ładowanie...", color = MaterialTheme.colorScheme.onBackground)
+                    Text(text = "Loading...", color = MaterialTheme.colorScheme.onBackground)
                 }
             } else if (errorMessage != null) {
                 Box(
@@ -212,6 +217,10 @@ fun FindScreen(resetSignal: Int) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(0.85f)
+                                .clickable {
+                                    selectedCocktail = cocktail
+                                    isDrawerOpen = true
+                                }
                         ) {
                             Column(
                                 modifier = Modifier
@@ -235,7 +244,7 @@ fun FindScreen(resetSignal: Int) {
                                 )
                                 if (state is AsyncImagePainter.State.Error) {
                                     Text(
-                                        text = "Błąd obrazka",
+                                        text = "Image error",
                                         color = MaterialTheme.colorScheme.error,
                                         fontSize = 12.sp,
                                         modifier = Modifier.padding(4.dp)
@@ -258,5 +267,14 @@ fun FindScreen(resetSignal: Int) {
                 }
             }
         }
+    }
+    
+    // Szuflada ze szczegółami drinka umieszczona poza głównym układem
+    if (selectedCocktail != null) {
+        DetailedDrinkDrawer(
+            cocktail = selectedCocktail,
+            isOpen = isDrawerOpen,
+            onClose = { isDrawerOpen = false }
+        )
     }
 }

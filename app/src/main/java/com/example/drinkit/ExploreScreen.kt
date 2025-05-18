@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
@@ -39,7 +40,11 @@ fun ExploreScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Pobieranie drinków przy zmianie litery
+    // Stan do obsługi szuflady szczegółów drinka
+    var selectedCocktail by remember { mutableStateOf<Cocktail?>(null) }
+    var isDrawerOpen by remember { mutableStateOf(false) }
+
+    // Pobieranie drinków po literze
     LaunchedEffect(selectedLetter) {
         isLoading = true
         errorMessage = null
@@ -47,150 +52,158 @@ fun ExploreScreen(
             val response = ApiClient.api.getCocktailsByLetter(selectedLetter.toString())
             cocktails = response.drinks ?: emptyList()
         } catch (e: Exception) {
-            errorMessage = "Błąd podczas ładowania drinków"
+            errorMessage = "Błąd pobierania drinków"
+            cocktails = emptyList()
         } finally {
             isLoading = false
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Pasek liter
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(
+            // Pasek liter
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .background(
-                        MaterialTheme.colorScheme.primary,
-                        shape = MaterialTheme.shapes.large
-                    )
+                    .horizontalScroll(scrollState)
                     .padding(vertical = 8.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Row(
-                    modifier = Modifier
-                        .horizontalScroll(scrollState)
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    letters.forEach { letter ->
-                        val isSelected = letter == selectedLetter
+                letters.forEach { letter ->
+                    val isSelected = letter == selectedLetter
+                    Text(
+                        text = letter.toString(),
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .clickable { onLetterSelected(letter) }
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                shape = MaterialTheme.shapes.small
+                            )
+                            .padding(vertical = 4.dp, horizontal = 12.dp),
+                        style = TextStyle(
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 18.sp
+                        )
+                    )
+                }
+            }
+
+            // Wyświetlanie drinków
+            Box(modifier = Modifier.fillMaxSize()) {
+                when {
+                    isLoading -> {
                         Box(
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .size(56.dp)
-                                .background(
-                                    color = if (isSelected) MaterialTheme.colorScheme.background else Color.Transparent,
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                                .clickable { onLetterSelected(letter) },
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    errorMessage != null -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = letter.toString(),
-                                fontSize = 32.sp,
-                                color = if (isSelected)
-                                    MaterialTheme.colorScheme.onBackground
-                                else
-                                    MaterialTheme.colorScheme.onPrimary,
-                                fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
+                                text = errorMessage ?: "",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         }
                     }
-                }
-            }
-        }
-
-        // Wyświetlanie drinków
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Ładowanie...", color = MaterialTheme.colorScheme.onBackground)
-            }
-        } else if (errorMessage != null) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
-            }
-        } else if (cocktails.isEmpty()) {
-            // Obsługa pustej listy drinków
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Nothing found",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(cocktails) { cocktail ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(0.85f)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.surface),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                    cocktails.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            val painter = rememberAsyncImagePainter(
-                                model = cocktail.strDrinkThumb,
-                                error = painterResource(android.R.drawable.ic_menu_report_image),
-                                placeholder = painterResource(android.R.drawable.ic_menu_gallery)
-                            )
-                            val state = painter.state
-                            Image(
-                                painter = painter,
-                                contentDescription = cocktail.strDrink,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                            if (state is AsyncImagePainter.State.Error) {
-                                Text(
-                                    text = "Błąd obrazka",
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.padding(4.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = cocktail.strDrink,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 18.sp,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp)
+                                text = "Brak drinków dla tej litery.",
+                                style = MaterialTheme.typography.bodyLarge
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    else -> {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(cocktails) { cocktail ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(0.85f)
+                                        .clickable {
+                                            selectedCocktail = cocktail
+                                            isDrawerOpen = true
+                                        }
+                                ) {
+                                    // Zaktualizowany układ karty, zgodny z FindScreen
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(MaterialTheme.colorScheme.surface),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        val painter = rememberAsyncImagePainter(
+                                            model = cocktail.strDrinkThumb,
+                                            error = painterResource(android.R.drawable.ic_menu_report_image),
+                                            placeholder = painterResource(android.R.drawable.ic_menu_gallery)
+                                        )
+                                        val state = painter.state
+                                        Image(
+                                            painter = painter,
+                                            contentDescription = cocktail.strDrink,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(120.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        if (state is AsyncImagePainter.State.Error) {
+                                            Text(
+                                                text = "Image error",
+                                                color = MaterialTheme.colorScheme.error,
+                                                fontSize = 12.sp,
+                                                modifier = Modifier.padding(4.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = cocktail.strDrink,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            fontSize = 18.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 8.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+    
+    // Szuflada ze szczegółami drinka umieszczona poza głównym układem,
+    // dzięki czemu nakłada się na cały ekran, łącznie z paskami
+    if (selectedCocktail != null) {
+        DetailedDrinkDrawer(
+            cocktail = selectedCocktail,
+            isOpen = isDrawerOpen,
+            onClose = { isDrawerOpen = false }
+        )
     }
 }

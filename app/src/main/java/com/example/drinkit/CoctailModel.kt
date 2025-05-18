@@ -6,7 +6,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 data class Cocktail(
     val idDrink: String,
     val strDrink: String,
-    val strDrinkThumb: String
+    val strDrinkThumb: String,
+    val strCategory: String? = null, // Dodano pole kategorii
+    val strInstructions: String? = null // Dodano pole instrukcji
 )
 
 data class CocktailResponse(val drinks: List<Cocktail>?)
