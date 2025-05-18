@@ -9,4 +9,7 @@ interface CocktailApi {
 
     @GET("search.php")
     suspend fun getCocktailsByName(@Query("s") name: String): CocktailResponse
+    
+    @GET("random.php")
+    suspend fun getRandomCocktail(): CocktailResponse
 }

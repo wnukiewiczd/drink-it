@@ -7,7 +7,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,12 +22,45 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
     onExploreClick: () -> Unit,
     onFindClick: () -> Unit
 ) {
+    // Stan dla losowego drinka
+    var randomCocktail by remember { mutableStateOf<Cocktail?>(null) }
+    var isDrawerOpen by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Funkcja do pobierania losowego drinka
+    fun getRandomDrink() {
+        isLoading = true
+        errorMessage = null
+        
+        coroutineScope.launch {
+            try {
+                val response = ApiClient.api.getRandomCocktail()
+                randomCocktail = response.drinks?.firstOrNull()
+                if (randomCocktail != null) {
+                    isDrawerOpen = true
+                } else {
+                    errorMessage = "No drink found"
+                }
+            } catch (e: Exception) {
+                errorMessage = "Error fetching random drink"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -62,13 +99,22 @@ fun HomeScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Button(
-                    onClick = { /* TODO: shuffle action */ },
+                    onClick = { getRandomDrink() },
                     shape = CircleShape,
                     contentPadding = PaddingValues(24.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     modifier = Modifier
-                        .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                        .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp),
+                    enabled = !isLoading
                 ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                     Text(
                         text = "Shuffle me a drink!",
                         fontSize = 24.sp,
@@ -77,6 +123,17 @@ fun HomeScreen(
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
+            }
+            
+            // Wyświetlanie błędu, jeśli wystąpił
+            if (errorMessage != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = errorMessage ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
             }
         }
         Row(
@@ -107,5 +164,15 @@ fun HomeScreen(
                 Text(text = "Find a Drink", fontSize = 16.sp)
             }
         }
+    }
+    
+    // Szuflada ze szczegółami losowego drinka
+    // Wydzielona poza główny układ tak samo jak w ExploreScreen i FindScreen
+    if (randomCocktail != null) {
+        DetailedDrinkDrawer(
+            cocktail = randomCocktail,
+            isOpen = isDrawerOpen,
+            onClose = { isDrawerOpen = false }
+        )
     }
 }
