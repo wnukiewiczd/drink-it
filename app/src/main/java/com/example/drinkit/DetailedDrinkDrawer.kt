@@ -10,9 +10,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.outlined.LocalBar
+import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.WineBar
+import androidx.compose.material.icons.outlined.LocalDrink
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,12 +24,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
@@ -58,25 +60,23 @@ fun DetailedDrinkDrawer(
         label = "drawerPosition"
     )
     LaunchedEffect(offsetX) {
-        if (offsetX > dismissThreshold.value) {
+        if (kotlin.math.abs(offsetX) > dismissThreshold.value) {
             onClose()
             offsetX = 0f
         }
     }
 
-    // --- GWIAZDKA: obsługa ulubionych ---
+    // --- Favourites star logic ---
     val context = LocalContext.current
     var isFavourite by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // Sprawdź czy drink jest w ulubionych
     LaunchedEffect(cocktail.idDrink) {
         isFavourite = withContext(Dispatchers.IO) {
             val db = AppDatabase.getDatabase(context)
             db.favouriteDao().isFavourite(cocktail.idDrink)
         }
     }
-    // --- KONIEC GWIAZDKI ---
 
     Box(
         modifier = Modifier
@@ -100,16 +100,14 @@ fun DetailedDrinkDrawer(
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
                         onDragEnd = {
-                            if (offsetX > dismissThreshold.value) {
+                            if (kotlin.math.abs(offsetX) > dismissThreshold.value) {
                                 onClose()
                             }
                             offsetX = 0f
                         },
                         onDragCancel = { offsetX = 0f },
                         onHorizontalDrag = { _, dragAmount ->
-                            if (dragAmount > 0) {
-                                offsetX += dragAmount
-                            }
+                            offsetX += dragAmount
                         }
                     )
                 }
@@ -121,7 +119,7 @@ fun DetailedDrinkDrawer(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Pasek górny z przyciskiem zamykania i gwiazdką
+                    // Top bar with close and favourite
                     TopAppBar(
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.background
@@ -137,7 +135,7 @@ fun DetailedDrinkDrawer(
                             IconButton(onClick = onClose) {
                                 Icon(
                                     imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Zamknij szczegóły",
+                                    contentDescription = "Close details",
                                     tint = MaterialTheme.colorScheme.onBackground
                                 )
                             }
@@ -146,7 +144,8 @@ fun DetailedDrinkDrawer(
                             Text(
                                 cocktail.strDrink,
                                 color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 22.sp
+                                fontSize = 22.sp,
+                                maxLines = 1
                             )
                         },
                         actions = {
@@ -180,76 +179,217 @@ fun DetailedDrinkDrawer(
                             ) {
                                 Icon(
                                     imageVector = if (isFavourite) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                                    contentDescription = if (isFavourite) "Usuń z ulubionych" else "Dodaj do ulubionych",
+                                    contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
                     )
 
-                    // --- Szczegóły drinka ---
+                    // --- Drink details ---
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(16.dp),
+                            .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Obrazek drinka
+                        // Drink image
                         Image(
                             painter = rememberAsyncImagePainter(cocktail.strDrinkThumb),
                             contentDescription = cocktail.strDrink,
                             modifier = Modifier
-                                .size(200.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp)),
+                                .size(180.dp)
+                                .clip(CircleShape)
+                                .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape),
                             contentScale = ContentScale.Crop
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(18.dp))
                         Text(
                             text = cocktail.strDrink,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = cocktail.strCategory ?: "",
-                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Typ: ${cocktail.strAlcoholic ?: ""}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Szkło: ${cocktail.strGlass ?: ""}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Składniki:",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        cocktail.getIngredientsMeasures().forEach { (ingredient, measure) ->
-                            Text(
-                                text = "- $ingredient${if (!measure.isNullOrBlank()) " (${measure})" else ""}",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // --- BADGES: Category & Alcoholic in one row, Glass below (full width) ---
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            if (!cocktail.strCategory.isNullOrBlank()) {
+                                AssistChip(
+                                    onClick = {},
+                                    label = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Category,
+                                                contentDescription = "Category",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                cocktail.strCategory ?: "",
+                                                color = Color.White,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier
+                                            )
+                                        }
+                                    },
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = Color(0xFF7C4DFF)
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 6.dp)
+                                )
+                            }
+                            if (!cocktail.strAlcoholic.isNullOrBlank()) {
+                                AssistChip(
+                                    onClick = {},
+                                    label = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.LocalBar,
+                                                contentDescription = "Alcoholic",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                cocktail.strAlcoholic ?: "",
+                                                color = Color.White,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier
+                                            )
+                                        }
+                                    },
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = Color(0xFF00BFAE)
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        // Glass badge below, full width
+                        if (!cocktail.strGlass.isNullOrBlank()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 6.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                AssistChip(
+                                    onClick = {},
+                                    label = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.WineBar,
+                                                contentDescription = "Glass",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                cocktail.strGlass ?: "",
+                                                color = Color.White,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier
+                                            )
+                                        }
+                                    },
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = Color(0xFFEF6C00)
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        // Ingredients
                         Text(
-                            text = "Instrukcje:",
+                            text = "Ingredients",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.align(Alignment.Start)
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            cocktail.getIngredientsMeasures().forEach { (ingredient, measure) ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.LocalDrink,
+                                        contentDescription = "Ingredient",
+                                        tint = Color(0xFF00BFAE),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = ingredient,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                    if (!measure.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "($measure)",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(22.dp))
+
+                        // Instructions
+                        Text(
+                            text = "Instructions",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.align(Alignment.Start)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = cocktail.strInstructions ?: "",
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            textAlign = TextAlign.Start
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
