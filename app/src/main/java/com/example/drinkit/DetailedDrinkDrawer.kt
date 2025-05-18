@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -178,9 +179,9 @@ fun DetailedDrinkDrawer(
                                 }
                             ) {
                                 Icon(
-                                    imageVector = if (isFavourite) Icons.Filled.Star else Icons.Outlined.Star,
+                                    imageVector = if (isFavourite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                                     contentDescription = if (isFavourite) "Usuń z ulubionych" else "Dodaj do ulubionych",
-                                    tint = if (isFavourite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
