@@ -1,0 +1,96 @@
+package com.example.drinkit
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.livedata.observeAsState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DrawerTopBar(onCloseClick: () -> Unit) {
+    TopAppBar(
+        title = { Text("Favourites") },
+        navigationIcon = {
+            IconButton(onClick = onCloseClick) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Zamknij menu"
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DrawerContent(onCloseClick: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var favourites by remember { mutableStateOf<List<FavouriteEntity>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Pobierz ulubione drinki z bazy danych Room
+    LaunchedEffect(Unit) {
+        scope.launch(Dispatchers.IO) {
+            val db = AppDatabase.getDatabase(context)
+            val favs = db.favouriteDao().getAll()
+            favourites = favs
+            isLoading = false
+        }
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxHeight()
+            .fillMaxWidth(0.75f),
+        color = MaterialTheme.colorScheme.background,
+        shape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
+        shadowElevation = 8.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            DrawerTopBar(onCloseClick = onCloseClick)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Ulubione drinki:",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+            )
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+            } else if (favourites.isEmpty()) {
+                Text(
+                    text = "Brak ulubionych drinków.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    favourites.forEach { fav ->
+                        Text(
+                            text = fav.drinkName, // wyświetl nazwę drinka
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+            // ...możesz dodać inne elementy menu poniżej...
+        }
+    }
+}

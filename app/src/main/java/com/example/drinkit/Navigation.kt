@@ -64,6 +64,7 @@ import com.example.drinkit.SettingsScreen
 import com.example.drinkit.ThemeMode
 import com.example.drinkit.DrawerTopBar
 import com.example.drinkit.FindScreen
+import com.example.drinkit.DrawerContent
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -171,22 +172,9 @@ fun AppNavigation(
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.75f),
-                    color = MaterialTheme.colorScheme.background,
-                    shape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp), // zaokrąglenie prawej krawędzi
-                    shadowElevation = 8.dp
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        DrawerTopBar(onCloseClick = { scope.launch { drawerState.close() } })
-                        // Możesz dodać tu kolejne elementy szuflady poniżej paska
-                    }
-                }
+                DrawerContent(
+                    onCloseClick = { scope.launch { drawerState.close() } }
+                )
             }
         ) {
             Scaffold(
