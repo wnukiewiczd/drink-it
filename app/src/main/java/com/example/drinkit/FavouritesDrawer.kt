@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +38,8 @@ fun DrawerTopBar(onCloseClick: () -> Unit) {
 @Composable
 fun DrawerContent(
     onCloseClick: () -> Unit,
-    isDrawerOpen: Boolean // dodaj parametr
+    isDrawerOpen: Boolean,
+    onFavouriteClick: (String) -> Unit // dodaj parametr
 ) {
     val context = LocalContext.current
     var favourites by remember { mutableStateOf<List<FavouriteEntity>>(emptyList()) }
@@ -82,9 +84,11 @@ fun DrawerContent(
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     favourites.forEach { fav ->
                         Text(
-                            text = fav.drinkName, // wyświetl nazwę drinka
+                            text = fav.drinkName,
                             style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .clickable { onFavouriteClick(fav.idDrink) } // obsługa kliknięcia
                         )
                     }
                 }
