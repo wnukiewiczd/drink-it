@@ -78,3 +78,8 @@ object ApiClient {
             .create(CocktailApi::class.java)
     }
 }
+
+// Funkcja rozszerzająca sprawdzająca, czy drink jest alkoholowy
+fun Cocktail.isAlcoholic(): Boolean {
+    return this.strAlcoholic?.lowercase() == "alcoholic"
+}

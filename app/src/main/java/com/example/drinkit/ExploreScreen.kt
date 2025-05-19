@@ -46,13 +46,23 @@ fun ExploreScreen(
     var selectedCocktail by remember { mutableStateOf<Cocktail?>(null) }
     var isDrawerOpen by remember { mutableStateOf(false) }
 
+    // Nowy stan dla filtra alkoholowego
+    var isAlcoholic by remember { mutableStateOf<Boolean?>(null) }
+
     // Pobieranie drinków po literze
-    LaunchedEffect(selectedLetter) {
+    LaunchedEffect(selectedLetter, isAlcoholic) {
         isLoading = true
         errorMessage = null
         try {
             val response = ApiClient.api.getCocktailsByLetter(selectedLetter.toString())
-            cocktails = response.drinks ?: emptyList()
+            var allCocktails = response.drinks ?: emptyList()
+
+            // Filtrowanie drinków na podstawie wybranego filtra alkoholowego
+            if (isAlcoholic != null) {
+                allCocktails = allCocktails.filter { it.isAlcoholic() == isAlcoholic }
+            }
+
+            cocktails = allCocktails
         } catch (e: Exception) {
             errorMessage = "Błąd pobierania drinków"
             cocktails = emptyList()
@@ -96,6 +106,30 @@ fun ExploreScreen(
                         )
                     )
                 }
+            }
+
+            // Dodajemy filtry alkoholowe
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // Przycisk "Alkoholowe"
+                FilterChip(
+                    selected = isAlcoholic == true,
+                    onClick = { isAlcoholic = if (isAlcoholic == true) null else true },
+                    label = { Text("Alkoholowe") },
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+
+                // Przycisk "Bezalkoholowe"
+                FilterChip(
+                    selected = isAlcoholic == false,
+                    onClick = { isAlcoholic = if (isAlcoholic == false) null else false },
+                    label = { Text("Bezalkoholowe") },
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
             }
 
             // Wyświetlanie drinków
