@@ -119,6 +119,18 @@ fun FindScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(boxTopPadding))
+
+            // Wyświetl tekst tylko, gdy nie trwa wyszukiwanie
+            if (!searching) {
+                Text(
+                    text = "Find a specific drink",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
             Surface(
                 tonalElevation = 4.dp,
                 shape = RoundedCornerShape(32.dp),
