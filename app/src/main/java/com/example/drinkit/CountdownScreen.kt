@@ -42,15 +42,19 @@ fun CountdownScreen(initialTime: Int = 0) {
     var isFinished by rememberSaveable { mutableStateOf(false) }
     var showTimePicker by rememberSaveable { mutableStateOf(initialTime == 0) }
 
+    // Synchronizacja stanu odliczania - gdy minutnik nie jest w trybie edycji
+    var lastTimeInSeconds by rememberSaveable { mutableStateOf(timeInSeconds) }
+
     val hoursState = rememberLazyListState(initialFirstVisibleItemIndex = hours)
     val minutesState = rememberLazyListState(initialFirstVisibleItemIndex = minutes)
     val secondsState = rememberLazyListState(initialFirstVisibleItemIndex = seconds)
     val coroutineScope = rememberCoroutineScope()
 
-    // Synchronizuj timeInSeconds z licznikami tylko gdy NIE trwa odliczanie
+    // Synchronizuj timeInSeconds z licznikami tylko podczas edycji czasu (showTimePicker == true)
     LaunchedEffect(hours, minutes, seconds) {
-        if (!isRunning && !isFinished) {
+        if (showTimePicker) {
             timeInSeconds = hours * 3600 + minutes * 60 + seconds
+            lastTimeInSeconds = timeInSeconds
         }
     }
 
@@ -62,15 +66,27 @@ fun CountdownScreen(initialTime: Int = 0) {
                 minutes = (initialTime % 3600) / 60
                 seconds = initialTime % 60
                 timeInSeconds = initialTime
+                lastTimeInSeconds = timeInSeconds
                 showTimePicker = false
             }
             isFirstRun = false
         }
     }
 
-    // Synchronizuj pickery z wartościami, gdy reset
-    LaunchedEffect(isRunning) {
-        if (!isRunning && !isFinished) {
+    // Aktualizacja wyświetlanych wartości gdy zmieni się timeInSeconds (np. podczas odliczania lub po pauzie)
+    LaunchedEffect(timeInSeconds) {
+        if (!showTimePicker) {
+            lastTimeInSeconds = timeInSeconds
+        }
+    }
+
+    // Synchronizuj pickery z wartościami, tylko gdy pokazujemy picker
+    LaunchedEffect(showTimePicker) {
+        if (showTimePicker) {
+            hours = timeInSeconds / 3600
+            minutes = (timeInSeconds % 3600) / 60
+            seconds = timeInSeconds % 60
+            
             coroutineScope.launch { hoursState.scrollToItem(hours) }
             coroutineScope.launch { minutesState.scrollToItem(minutes) }
             coroutineScope.launch { secondsState.scrollToItem(seconds) }
@@ -79,13 +95,13 @@ fun CountdownScreen(initialTime: Int = 0) {
 
     // Synchronizuj wartości z pickerów, gdy użytkownik scrolluje
     LaunchedEffect(hoursState.firstVisibleItemIndex) {
-        if (!isRunning && !isFinished) hours = hoursState.firstVisibleItemIndex
+        if (showTimePicker) hours = hoursState.firstVisibleItemIndex
     }
     LaunchedEffect(minutesState.firstVisibleItemIndex) {
-        if (!isRunning && !isFinished) minutes = minutesState.firstVisibleItemIndex
+        if (showTimePicker) minutes = minutesState.firstVisibleItemIndex
     }
     LaunchedEffect(secondsState.firstVisibleItemIndex) {
-        if (!isRunning && !isFinished) seconds = secondsState.firstVisibleItemIndex
+        if (showTimePicker) seconds = secondsState.firstVisibleItemIndex
     }
 
     Box(
@@ -219,6 +235,7 @@ fun CountdownScreen(initialTime: Int = 0) {
                         minutes = 0
                         seconds = 0
                         timeInSeconds = 0
+                        lastTimeInSeconds = 0
                         coroutineScope.launch { hoursState.scrollToItem(0) }
                         coroutineScope.launch { minutesState.scrollToItem(0) }
                         coroutineScope.launch { secondsState.scrollToItem(0) }
