@@ -181,6 +181,7 @@ fun CountdownScreen(initialTime: Int = 0) {
                             // Po zakończeniu minutnika play nie robi nic
                         } else if (timeInSeconds > 0) {
                             isRunning = true
+                            showTimePicker = false // Ukryj TimePickerSection po kliknięciu Play
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
