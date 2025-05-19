@@ -35,7 +35,8 @@ fun CountdownScreen(initialTime: Int = 0) {
     var seconds by remember { mutableStateOf(0) }
     var timeInSeconds by remember { mutableStateOf(0) }
     var isRunning by remember { mutableStateOf(false) }
-    var isFinished by remember { mutableStateOf(false) } // Dodane
+    var isFinished by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(initialTime == 0) } // Dodany stan
 
     val hoursState = rememberLazyListState(initialFirstVisibleItemIndex = hours)
     val minutesState = rememberLazyListState(initialFirstVisibleItemIndex = minutes)
@@ -56,6 +57,9 @@ fun CountdownScreen(initialTime: Int = 0) {
             minutes = (initialTime % 3600) / 60
             seconds = initialTime % 60
             timeInSeconds = initialTime
+            showTimePicker = false // Ukryj TimePickerSection, gdy initialTime > 0
+        } else {
+            showTimePicker = true // Pokaż TimePickerSection, gdy initialTime == 0
         }
     }
 
@@ -92,8 +96,8 @@ fun CountdownScreen(initialTime: Int = 0) {
             val displayHeight = 120.dp
             val itemHeight = 50.dp
 
-            if (!isRunning && !isFinished) {
-                // Pickery dostępne zawsze, gdy minutnik nie jest uruchomiony i nie jest finished
+            if (showTimePicker) {
+                // Pickery dostępne zawsze, gdy showTimePicker jest true
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
@@ -204,6 +208,7 @@ fun CountdownScreen(initialTime: Int = 0) {
                     onClick = {
                         isRunning = false
                         isFinished = false
+                        showTimePicker = true // Pokaż TimePickerSection po resecie
                         hours = 0
                         minutes = 0
                         seconds = 0
