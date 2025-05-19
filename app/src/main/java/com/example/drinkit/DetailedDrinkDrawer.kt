@@ -422,7 +422,7 @@ fun calculatePrepareTime(instructions: String?): Int {
         totalTime += count * time
     }
 
-    return totalTime
+    return maxOf(30, totalTime)
 }
 
 fun formatPrepareTime(totalSeconds: Int): String {
