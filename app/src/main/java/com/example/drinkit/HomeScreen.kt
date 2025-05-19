@@ -25,6 +25,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun HomeScreen(
@@ -63,6 +72,8 @@ fun HomeScreen(
         }
     }
     
+    val scrollState = rememberScrollState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -72,6 +83,7 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(scrollState)
                 .align(Alignment.TopCenter),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -126,7 +138,7 @@ fun HomeScreen(
                     )
                 }
             }
-            
+
             // Wyświetlanie błędu, jeśli wystąpił
             if (errorMessage != null) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -137,33 +149,33 @@ fun HomeScreen(
                     textAlign = TextAlign.Center
                 )
             }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
-        ) {
-            Button(
-                onClick = onExploreClick,
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
             ) {
-                Text(text = "Explore Drinks", fontSize = 16.sp)
-            }
-            Button(
-                onClick = onFindClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text(text = "Find a Drink", fontSize = 16.sp)
+                Button(
+                    onClick = onExploreClick,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(text = "Explore Drinks", fontSize = 16.sp)
+                }
+                Button(
+                    onClick = onFindClick,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(text = "Find a Drink", fontSize = 16.sp)
+                }
             }
         }
     }
