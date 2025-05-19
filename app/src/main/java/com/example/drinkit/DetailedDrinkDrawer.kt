@@ -428,5 +428,10 @@ fun calculatePrepareTime(instructions: String?): Int {
 fun formatPrepareTime(totalSeconds: Int): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
-    return String.format("%02d:%02d", minutes, seconds)
+
+    return when {
+        minutes == 0 -> "$seconds seconds"
+        seconds == 0 -> "$minutes minutes"
+        else -> "$minutes minutes $seconds seconds"
+    }
 }
