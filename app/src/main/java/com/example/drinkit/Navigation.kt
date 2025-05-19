@@ -207,8 +207,6 @@ fun AppNavigation(
                                     onTabSelected = { switchTab(it) }
                                 )
                                 "Explore" -> ExploreScreen(
-                                    selectedLetter = selectedLetter,
-                                    onLetterSelected = { selectedLetter = it },
                                     onPrepareTimeChange = { time -> prepareTime = time },
                                     onTabSelected = { switchTab(it) }
                                 )

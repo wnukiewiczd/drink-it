@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,8 +29,6 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ExploreScreen(
-    selectedLetter: Char,
-    onLetterSelected: (Char) -> Unit,
     onPrepareTimeChange: (Int) -> Unit, // Dodana funkcja
     onTabSelected: (Int) -> Unit // Dodana funkcja
 ) {
@@ -50,6 +49,8 @@ fun ExploreScreen(
     var isAlcoholic by remember { mutableStateOf<Boolean?>(null) }
 
     // Pobieranie drinków po literze
+    var selectedLetter by rememberSaveable { mutableStateOf('A') }
+
     LaunchedEffect(selectedLetter, isAlcoholic) {
         isLoading = true
         errorMessage = null
@@ -93,7 +94,7 @@ fun ExploreScreen(
                         text = letter.toString(),
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
-                            .clickable { onLetterSelected(letter) }
+                            .clickable { selectedLetter = letter }
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                                 shape = MaterialTheme.shapes.small
