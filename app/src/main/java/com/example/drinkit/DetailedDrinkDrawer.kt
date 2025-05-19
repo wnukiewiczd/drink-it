@@ -285,47 +285,39 @@ fun DetailedDrinkDrawer(
                                 )
                             }
                         }
-                        // Glass badge below, full width
+                        // Glass badge below
                         if (!cocktail.strGlass.isNullOrBlank()) {
-                            Row(
+                            AssistChip(
+                                onClick = {},
+                                label = {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.WineBar,
+                                            contentDescription = "Glass",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            cocktail.strGlass ?: "",
+                                            color = Color.White,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier
+                                        )
+                                    }
+                                },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = Color(0xFF6D4C41)
+                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 6.dp),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                AssistChip(
-                                    onClick = {},
-                                    label = {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.WineBar,
-                                                contentDescription = "Glass",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                cocktail.strGlass ?: "",
-                                                color = Color.White,
-                                                textAlign = TextAlign.Center,
-                                                modifier = Modifier
-                                            )
-                                        }
-                                    },
-                                    colors = AssistChipDefaults.assistChipColors(
-                                        containerColor = Color(0xFFEF6C00)
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                )
-                            }
+                                    .padding(vertical = 6.dp)
+                            )
                         }
-
-                        Spacer(modifier = Modifier.height(18.dp))
 
                         // Ingredients
                         Text(
@@ -336,43 +328,16 @@ fun DetailedDrinkDrawer(
                             modifier = Modifier.align(Alignment.Start)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            cocktail.getIngredientsMeasures().forEach { (ingredient, measure) ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 2.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.LocalDrink,
-                                        contentDescription = "Ingredient",
-                                        tint = Color(0xFF00BFAE),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = ingredient,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                    if (!measure.isNullOrBlank()) {
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "($measure)",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.Gray
-                                        )
-                                    }
-                                }
-                            }
+                        cocktail.getIngredientsMeasures().forEach { (ingredient, measure) ->
+                            Text(
+                                text = "${ingredient ?: ""} ${measure ?: ""}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
-
-                        Spacer(modifier = Modifier.height(22.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         // Instructions
                         Text(
@@ -390,9 +355,78 @@ fun DetailedDrinkDrawer(
                             textAlign = TextAlign.Start
                         )
                         Spacer(modifier = Modifier.height(16.dp))
+
+                        // Prepare time
+                        val prepareTime = calculatePrepareTime(cocktail.strInstructions)
+                        Text(
+                            text = "Prepare time",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.align(Alignment.Start)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = formatPrepareTime(prepareTime),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            textAlign = TextAlign.Start
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
         }
     }
+}
+
+fun calculatePrepareTime(instructions: String?): Int {
+    val timeMap = mapOf(
+        "shake" to 30, // 30 seconds
+        "stir" to 20,  // 20 seconds
+        "blend" to 45, // 45 seconds
+        "pour" to 10,  // 10 seconds
+        "mix" to 25,  // 25 seconds
+        "add" to 5,   // 5 seconds
+        "garnish" to 20, // 20 seconds
+        "layer" to 40, // 40 seconds
+        "muddle" to 45, // 45 seconds
+        "crush" to 35,  // 35 seconds
+        "top" to 15, // 15 seconds
+        "next" to 10, // 10 seconds
+        "after" to 10, // 10 seconds
+        "combine" to 15, // 15 seconds
+        "well" to 5, // 5 seconds
+        "repeat" to 30, // 30 seconds
+        "serve" to 5, // 5 seconds
+        "gently" to 10, // 10 seconds
+        "minutes" to 120, // 120 seconds
+        "seconds" to 20, // 20 seconds
+        "heat" to 60, // 60 seconds
+        "cool" to 30, // 30 seconds
+        "slowly" to 15, // 15 seconds
+        "fill" to 10, // 10 seconds
+        "place" to 10, // 10 seconds
+        "squeeze" to 20, // 20 seconds
+        "cover" to 15, // 15 seconds
+        "whiz" to 20, // 30 seconds
+    )
+
+    if (instructions == null) return 0
+
+    val lowerCaseInstructions = instructions.lowercase()
+    var totalTime = 0
+
+    timeMap.forEach { (keyword, time) ->
+        val count = lowerCaseInstructions.split(keyword).size - 1
+        totalTime += count * time
+    }
+
+    return totalTime
+}
+
+fun formatPrepareTime(totalSeconds: Int): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format("%02d:%02d", minutes, seconds)
 }
