@@ -18,12 +18,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,14 +31,12 @@ import android.view.View
 import android.widget.ImageView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.animation.doOnEnd
 
 @Composable
 fun SplashScreen(onAnimationFinished: () -> Unit) {
     var animationStarted by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Stan dla głównej animacji logo
     var logoVisible by remember { mutableStateOf(false) }
     val logoScale by animateFloatAsState(
         targetValue = if (logoVisible) 1f else 0f,
@@ -49,11 +44,9 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
         label = ""
     )
 
-    // Stan dla innych elementów
     var bubblesVisible by remember { mutableStateOf(false) }
     var textVisible by remember { mutableStateOf(false) }
-    
-    // Opóźnienia dla poszczególnych animacji
+
     LaunchedEffect(Unit) {
         animationStarted = true
         delay(100)
@@ -72,7 +65,6 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
             .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
-        // Główne logo aplikacji
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -91,19 +83,16 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
                 contentScale = ContentScale.Fit
             )
         }
-        
-        // Animowane bąbelki za pomocą ObjectAnimator
+
         if (bubblesVisible) {
             AndroidView(
                 factory = { context ->
-                    // Tworzymy kontener dla naszych animowanych bąbelków
                     val container = android.widget.FrameLayout(context)
                     container.layoutParams = android.widget.FrameLayout.LayoutParams(
                         android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                         android.widget.FrameLayout.LayoutParams.MATCH_PARENT
                     )
 
-                    // Tworzymy i dodajemy 5 bąbelków o różnych rozmiarach i kolorach
                     val colors = listOf(
                         android.graphics.Color.parseColor("#9C27B0"), // fioletowy
                         android.graphics.Color.parseColor("#2196F3"), // niebieski
@@ -113,7 +102,7 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
                     )
                     
                     val animatorSet = AnimatorSet()
-                    val animations = mutableListOf<Animator>() // Zmiana typu listy z ObjectAnimator na Animator
+                    val animations = mutableListOf<Animator>()
                     
                     for (i in 0 until 5) {
                         val bubble = ImageView(context)
@@ -122,8 +111,7 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
                         
                         val size = (30 + (i * 10)).dp.value.toInt()
                         val params = android.widget.FrameLayout.LayoutParams(size, size)
-                        
-                        // Ustawiamy początkową pozycję bąbelka
+
                         val screenWidth = context.resources.displayMetrics.widthPixels
                         val screenHeight = context.resources.displayMetrics.heightPixels
                         val startX = (0.4f + Math.random() * 0.2f) * screenWidth
@@ -134,8 +122,7 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
                         
                         bubble.layoutParams = params
                         container.addView(bubble)
-                        
-                        // Tworzymy animatory
+
                         val translateY = ObjectAnimator.ofFloat(
                             bubble, View.TRANSLATION_Y, 0f, -screenHeight * 0.5f
                         ).apply {
@@ -175,8 +162,7 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
                         ).apply {
                             duration = (2000 + (i * 500)).toLong()
                         }
-                        
-                        // Dodajemy animatory do listy typu Animator
+
                         animations.add(translateY)
                         animations.add(translateX)
                         animations.add(rotation)
@@ -184,8 +170,7 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
                         animations.add(scaleY)
                         animations.add(alpha)
                     }
-                    
-                    // Uruchamiamy wszystkie animacje równocześnie
+
                     animatorSet.playTogether(animations)
                     animatorSet.start()
                     
@@ -194,8 +179,7 @@ fun SplashScreen(onAnimationFinished: () -> Unit) {
                 modifier = Modifier.fillMaxSize()
             )
         }
-        
-        // Animowany tekst
+
         if (textVisible) {
             Column(
                 modifier = Modifier

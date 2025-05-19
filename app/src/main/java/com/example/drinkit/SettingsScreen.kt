@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,7 +46,7 @@ fun SettingsScreen(
                     .weight(1f)
                     .align(Alignment.CenterVertically)
             )
-            Spacer(modifier = Modifier.width(20.dp)) // nieco większy odstęp
+            Spacer(modifier = Modifier.width(20.dp))
             ThemeSwitcher(
                 themeMode = themeMode,
                 onThemeChange = onThemeChange,
@@ -64,7 +63,6 @@ private fun ThemeSwitcher(
     onThemeChange: (ThemeMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Zmniejszona szerokość switcha
     val switchWidth = 210.dp
     val switchHeight = 40.dp
     val thumbWidth = switchWidth / 3
@@ -85,7 +83,6 @@ private fun ThemeSwitcher(
             .clip(RoundedCornerShape(32.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        // Przesuwane tło
         Box(
             modifier = Modifier
                 .offset(x = thumbOffset)
@@ -109,7 +106,7 @@ private fun ThemeSwitcher(
                 Text(
                     text = "Light",
                     color = if (themeMode == ThemeMode.LIGHT) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
-                    fontSize = 13.sp, // zmniejszona czcionka
+                    fontSize = 13.sp,
                     maxLines = 1
                 )
             }
@@ -123,7 +120,7 @@ private fun ThemeSwitcher(
                 Text(
                     text = "System",
                     color = if (themeMode == ThemeMode.SYSTEM) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
-                    fontSize = 13.sp, // zmniejszona czcionka
+                    fontSize = 13.sp,
                     maxLines = 1
                 )
             }
@@ -137,7 +134,7 @@ private fun ThemeSwitcher(
                 Text(
                     text = "Dark",
                     color = if (themeMode == ThemeMode.DARK) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
-                    fontSize = 13.sp, // zmniejszona czcionka
+                    fontSize = 13.sp,
                     maxLines = 1
                 )
             }

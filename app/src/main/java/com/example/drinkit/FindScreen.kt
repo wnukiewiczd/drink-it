@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -29,7 +28,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
@@ -49,11 +47,9 @@ fun FindScreen(
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Stan do obsługi szczegółów drinka
     var selectedCocktail by remember { mutableStateOf<Cocktail?>(null) }
     var isDrawerOpen by remember { mutableStateOf(false) }
 
-    // Resetuj stan po zmianie resetSignal
     LaunchedEffect(resetSignal) {
         searching = false
         query = TextFieldValue("")
@@ -62,7 +58,6 @@ fun FindScreen(
         focusManager.clearFocus()
     }
 
-    // Funkcja do wyszukiwania drinków
     fun searchCocktails() {
         if (query.text.isNotBlank()) {
             isLoading = true
@@ -84,7 +79,6 @@ fun FindScreen(
         }
     }
 
-    // Animacje rozmiaru i położenia
     val boxWidth by animateDpAsState(
         targetValue = if (searching) 320.dp else 280.dp,
         animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing), label = ""
@@ -120,7 +114,6 @@ fun FindScreen(
         ) {
             Spacer(modifier = Modifier.height(boxTopPadding))
 
-            // Wyświetl tekst tylko, gdy nie trwa wyszukiwanie
             if (!searching) {
                 Text(
                     text = "Find a specific drink",
@@ -195,7 +188,6 @@ fun FindScreen(
                 }
             }
 
-            // Wyświetlanie wyników wyszukiwania
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -284,8 +276,7 @@ fun FindScreen(
             }
         }
     }
-    
-    // Szuflada ze szczegółami drinka umieszczona poza głównym układem
+
     if (selectedCocktail != null) {
         DetailedDrinkDrawer(
             cocktail = selectedCocktail,

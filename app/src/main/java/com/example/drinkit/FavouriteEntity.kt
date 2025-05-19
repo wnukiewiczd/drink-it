@@ -6,5 +6,5 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "favourites")
 data class FavouriteEntity(
     @PrimaryKey val idDrink: String,
-    val drinkName: String // nowa kolumna
+    val drinkName: String
 )

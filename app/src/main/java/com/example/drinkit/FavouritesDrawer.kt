@@ -9,8 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
 
@@ -23,7 +21,7 @@ fun DrawerTopBar(onCloseClick: () -> Unit) {
             IconButton(onClick = onCloseClick) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Close favourtites drawer",
+                    contentDescription = "Close favourites drawer",
                 )
             }
         },
@@ -39,13 +37,12 @@ fun DrawerTopBar(onCloseClick: () -> Unit) {
 fun DrawerContent(
     onCloseClick: () -> Unit,
     isDrawerOpen: Boolean,
-    onFavouriteClick: (String) -> Unit // dodaj parametr
+    onFavouriteClick: (String) -> Unit
 ) {
     val context = LocalContext.current
     var favourites by remember { mutableStateOf<List<FavouriteEntity>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Odświeżaj listę za każdym razem, gdy drawer jest otwierany
     LaunchedEffect(isDrawerOpen) {
         if (isDrawerOpen) {
             isLoading = true
@@ -102,7 +99,6 @@ fun DrawerContent(
                     }
                 }
             }
-            // ...możesz dodać inne elementy menu poniżej...
         }
     }
 }

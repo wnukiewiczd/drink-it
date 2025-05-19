@@ -14,7 +14,6 @@ import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material.icons.outlined.LocalBar
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.WineBar
-import androidx.compose.material.icons.outlined.LocalDrink
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +44,7 @@ fun DetailedDrinkDrawer(
     cocktail: Cocktail?,
     isOpen: Boolean,
     onClose: () -> Unit,
-    onPrepareNow: (Int) -> Unit // Dodana akcja
+    onPrepareNow: (Int) -> Unit
 ) {
     if (cocktail == null) return
 
@@ -67,7 +66,6 @@ fun DetailedDrinkDrawer(
         }
     }
 
-    // --- Favourites star logic ---
     val context = LocalContext.current
     var isFavourite by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -120,7 +118,6 @@ fun DetailedDrinkDrawer(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Top bar with close and favourite
                     TopAppBar(
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.background
@@ -214,8 +211,6 @@ fun DetailedDrinkDrawer(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(10.dp))
-
-                        // --- BADGES: Category & Alcoholic in one row, Glass below (full width) ---
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -286,7 +281,6 @@ fun DetailedDrinkDrawer(
                                 )
                             }
                         }
-                        // Glass badge below
                         if (!cocktail.strGlass.isNullOrBlank()) {
                             AssistChip(
                                 onClick = {},
@@ -319,8 +313,6 @@ fun DetailedDrinkDrawer(
                                     .padding(vertical = 6.dp)
                             )
                         }
-
-                        // Ingredients
                         Text(
                             text = "Ingredients",
                             style = MaterialTheme.typography.titleMedium,
@@ -339,8 +331,6 @@ fun DetailedDrinkDrawer(
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-
-                        // Instructions
                         Text(
                             text = "Instructions",
                             style = MaterialTheme.typography.titleMedium,
@@ -357,7 +347,6 @@ fun DetailedDrinkDrawer(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Prepare time
                         val prepareTime = calculatePrepareTime(cocktail.strInstructions)
                         Text(
                             text = "Prepare time",
@@ -375,7 +364,6 @@ fun DetailedDrinkDrawer(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Prepare now button
                         Button(
                             onClick = { onPrepareNow(prepareTime) },
                             modifier = Modifier

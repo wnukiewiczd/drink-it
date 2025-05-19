@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [FavouriteEntity::class], version = 2) // zmiana wersji na 2
+@Database(entities = [FavouriteEntity::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun favouriteDao(): FavouriteDao
 
@@ -20,7 +20,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "drinkit_database"
                 )
-                // UWAGA: fallbackToDestructiveMigration usuwa dane przy zmianie schematu!
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

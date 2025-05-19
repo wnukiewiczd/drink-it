@@ -110,15 +110,12 @@ fun AppNavigation(
     var selectedLetter by remember { mutableStateOf('A') }
     var findScreenResetSignal by remember { mutableStateOf(0) }
 
-    // Stan do detailed drawer z ulubionych
     var selectedFavouriteDrink by remember { mutableStateOf<Cocktail?>(null) }
     var isDetailedDrawerOpen by remember { mutableStateOf(false) }
     var isLoadingFavouriteDetails by remember { mutableStateOf(false) }
 
-    // Stan dla czasu przygotowania
     var prepareTime by remember { mutableStateOf(0) }
 
-    // Funkcja do zmiany zakładki
     val switchTab: (Int) -> Unit = { page ->
         scope.launch { pagerState.animateScrollToPage(page) }
         if (items[page] == "Find") {
@@ -126,7 +123,6 @@ fun AppNavigation(
         }
     }
 
-    // Zamykaj detailed drawer przy każdej zmianie zakładki
     LaunchedEffect(pagerState.currentPage) {
         isDetailedDrawerOpen = false
         selectedFavouriteDrink = null
@@ -218,7 +214,7 @@ fun AppNavigation(
                             }
                         }
                     }
-                    // Drawer szczegółów drinka z ulubionych - tylko w content!
+
                     if (isDetailedDrawerOpen && selectedFavouriteDrink != null) {
                         DetailedDrinkDrawer(
                             cocktail = selectedFavouriteDrink,
@@ -227,7 +223,7 @@ fun AppNavigation(
                             onPrepareNow = { time ->
                                 prepareTime = time
                                 isDetailedDrawerOpen = false
-                                switchTab(1) // Przejdź do zakładki Countdown
+                                switchTab(1)
                             }
                         )
                     }

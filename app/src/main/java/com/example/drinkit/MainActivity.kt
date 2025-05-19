@@ -4,14 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.drinkit.ui.theme.DrinkItTheme
-import com.example.drinkit.AppNavigation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.isSystemInDarkTheme
-import com.example.drinkit.ThemeMode
 import android.content.Context
 
 class MainActivity : ComponentActivity() {
@@ -47,15 +44,13 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
                 ThemeMode.SYSTEM -> isSystemDark
             }
-            
-            // Dodanie stanu dla ekranu startowego
+
             var showSplashScreen by remember { mutableStateOf(true) }
             
             DrinkItTheme(
                 darkTheme = darkTheme,
                 dynamicColor = false
             ) {
-                // Wyświetlenie ekranu animacji startowej lub głównego interfejsu
                 if (showSplashScreen) {
                     SplashScreen(onAnimationFinished = {
                         showSplashScreen = false

@@ -27,30 +27,22 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
+
 
 @Composable
 fun HomeScreen(
     onExploreClick: () -> Unit,
     onFindClick: () -> Unit,
-    onPrepareTimeChange: (Int) -> Unit, // Dodana funkcja
-    onTabSelected: (Int) -> Unit // Dodana funkcja
+    onPrepareTimeChange: (Int) -> Unit,
+    onTabSelected: (Int) -> Unit
 ) {
-    // Stan dla losowego drinka
     var randomCocktail by remember { mutableStateOf<Cocktail?>(null) }
     var isDrawerOpen by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
     val coroutineScope = rememberCoroutineScope()
-    
-    // Funkcja do pobierania losowego drinka
+
     fun getRandomDrink() {
         isLoading = true
         errorMessage = null
@@ -139,7 +131,6 @@ fun HomeScreen(
                 }
             }
 
-            // Wyświetlanie błędu, jeśli wystąpił
             if (errorMessage != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -179,9 +170,7 @@ fun HomeScreen(
             }
         }
     }
-    
-    // Szuflada ze szczegółami losowego drinka
-    // Wydzielona poza główny układ tak samo jak w ExploreScreen i FindScreen
+
     if (randomCocktail != null) {
         DetailedDrinkDrawer(
             cocktail = randomCocktail,
@@ -189,8 +178,8 @@ fun HomeScreen(
             onClose = { isDrawerOpen = false },
             onPrepareNow = { time ->
                 onPrepareTimeChange(time)
-                onTabSelected(1) // Przejdź do zakładki Countdown
-                isDrawerOpen = false // Zamknij szufladę
+                onTabSelected(1)
+                isDrawerOpen = false
             }
         )
     }

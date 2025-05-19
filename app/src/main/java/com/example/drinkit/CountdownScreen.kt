@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.filter
 
 @Composable
 fun CountdownScreen(initialTime: Int = 0) {
-    // Zapisujemy czy to jest pierwsze uruchomienie komponentu
     var isFirstRun by rememberSaveable { mutableStateOf(true) }
     
     var hours by rememberSaveable { mutableStateOf(0) }
@@ -42,7 +41,6 @@ fun CountdownScreen(initialTime: Int = 0) {
     var isFinished by rememberSaveable { mutableStateOf(false) }
     var showTimePicker by rememberSaveable { mutableStateOf(initialTime == 0) }
 
-    // Synchronizacja stanu odliczania - gdy minutnik nie jest w trybie edycji
     var lastTimeInSeconds by rememberSaveable { mutableStateOf(timeInSeconds) }
 
     val hoursState = rememberLazyListState(initialFirstVisibleItemIndex = hours)
@@ -50,7 +48,6 @@ fun CountdownScreen(initialTime: Int = 0) {
     val secondsState = rememberLazyListState(initialFirstVisibleItemIndex = seconds)
     val coroutineScope = rememberCoroutineScope()
 
-    // Synchronizuj timeInSeconds z licznikami tylko podczas edycji czasu (showTimePicker == true)
     LaunchedEffect(hours, minutes, seconds) {
         if (showTimePicker) {
             timeInSeconds = hours * 3600 + minutes * 60 + seconds
@@ -58,7 +55,6 @@ fun CountdownScreen(initialTime: Int = 0) {
         }
     }
 
-    // Ustaw poczatkowy czas tylko przy pierwszym uruchomieniu
     LaunchedEffect(key1 = "initialization") {
         if (isFirstRun) {
             if (initialTime > 0) {
@@ -73,14 +69,12 @@ fun CountdownScreen(initialTime: Int = 0) {
         }
     }
 
-    // Aktualizacja wyświetlanych wartości gdy zmieni się timeInSeconds (np. podczas odliczania lub po pauzie)
     LaunchedEffect(timeInSeconds) {
         if (!showTimePicker) {
             lastTimeInSeconds = timeInSeconds
         }
     }
 
-    // Synchronizuj pickery z wartościami, tylko gdy pokazujemy picker
     LaunchedEffect(showTimePicker) {
         if (showTimePicker) {
             hours = timeInSeconds / 3600
@@ -93,7 +87,6 @@ fun CountdownScreen(initialTime: Int = 0) {
         }
     }
 
-    // Synchronizuj wartości z pickerów, gdy użytkownik scrolluje
     LaunchedEffect(hoursState.firstVisibleItemIndex) {
         if (showTimePicker) hours = hoursState.firstVisibleItemIndex
     }
@@ -118,7 +111,6 @@ fun CountdownScreen(initialTime: Int = 0) {
             val itemHeight = 50.dp
 
             if (showTimePicker) {
-                // Pickery dostępne zawsze, gdy showTimePicker jest true
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
@@ -165,7 +157,6 @@ fun CountdownScreen(initialTime: Int = 0) {
                     )
                 }
             } else {
-                // Statyczny wyświetlacz czasu podczas odliczania lub po zakończeniu
                 Text(
                     text = "%02d:%02d:%02d".format(
                         timeInSeconds / 3600,
@@ -179,7 +170,6 @@ fun CountdownScreen(initialTime: Int = 0) {
                         .wrapContentHeight(Alignment.CenterVertically)
                 )
             }
-            // Tekst "Finished" po zakończeniu odliczania
             if (isFinished) {
                 Text(
                     text = "Finished",
@@ -189,7 +179,6 @@ fun CountdownScreen(initialTime: Int = 0) {
                 )
             }
             Spacer(modifier = Modifier.height(32.dp))
-            // ...przyciski start/pauza/reset...
             Row(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -198,11 +187,9 @@ fun CountdownScreen(initialTime: Int = 0) {
                     onClick = {
                         if (isRunning) {
                             isRunning = false
-                        } else if (isFinished) {
-                            // Po zakończeniu minutnika play nie robi nic
                         } else if (timeInSeconds > 0) {
                             isRunning = true
-                            showTimePicker = false // Ukryj TimePickerSection po kliknięciu Play
+                            showTimePicker = false
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -230,7 +217,7 @@ fun CountdownScreen(initialTime: Int = 0) {
                     onClick = {
                         isRunning = false
                         isFinished = false
-                        showTimePicker = true // Pokaż TimePickerSection po resecie
+                        showTimePicker = true
                         hours = 0
                         minutes = 0
                         seconds = 0
@@ -283,7 +270,6 @@ private fun TimePickerSection(
     val density = LocalDensity.current
     val itemHeightPx = with(density) { itemHeight.toPx() }
 
-    // Automatyczne centrowanie po zakończeniu scrollowania
     LaunchedEffect(enabled) {
         if (enabled) {
             snapshotFlow { state.isScrollInProgress }
@@ -300,7 +286,7 @@ private fun TimePickerSection(
     }
 
     Box(
-        modifier = Modifier.width(56.dp), // zmniejszona szerokość
+        modifier = Modifier.width(56.dp),
         contentAlignment = Alignment.Center
     ) {
         LazyColumn(
@@ -313,7 +299,7 @@ private fun TimePickerSection(
             horizontalAlignment = Alignment.CenterHorizontally,
             userScrollEnabled = enabled
         ) {
-            items(valueRange.count()) { index: Int -> // dodano typ parametru
+            items(valueRange.count()) { index: Int ->
                 val value = valueRange.first + index
                 Box(
                     modifier = Modifier
@@ -325,7 +311,7 @@ private fun TimePickerSection(
                         text = "%02d".format(value),
                         fontSize = fontSize,
                         color = if (state.firstVisibleItemIndex == index) highlightColor else textColor.copy(alpha = 0.5f),
-                        modifier = Modifier.padding(vertical = 0.dp, horizontal = 0.dp) // brak paddingu
+                        modifier = Modifier.padding(vertical = 0.dp, horizontal = 0.dp)
                     )
                 }
             }

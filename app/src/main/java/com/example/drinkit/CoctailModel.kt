@@ -42,7 +42,6 @@ data class Cocktail(
     val strMeasure14: String? = null,
     val strMeasure15: String? = null
 ) {
-    // Funkcja pomocnicza zwracająca listę par składnik-miara (bez null i pustych)
     fun getIngredientsMeasures(): List<Pair<String, String?>> {
         val result = mutableListOf<Pair<String, String?>>()
         
@@ -79,7 +78,6 @@ object ApiClient {
     }
 }
 
-// Funkcja rozszerzająca sprawdzająca, czy drink jest alkoholowy
 fun Cocktail.isAlcoholic(): Boolean {
     return this.strAlcoholic?.lowercase() == "alcoholic"
 }

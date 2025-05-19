@@ -22,33 +22,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.launch
 
 @Composable
 fun ExploreScreen(
-    onPrepareTimeChange: (Int) -> Unit, // Dodana funkcja
-    onTabSelected: (Int) -> Unit // Dodana funkcja
+    onPrepareTimeChange: (Int) -> Unit,
+    onTabSelected: (Int) -> Unit
 ) {
     val letters = ('A'..'Z').toList()
     val scrollState = rememberScrollState()
-    val coroutineScope = rememberCoroutineScope()
 
-    // Stan dla drinków
     var cocktails by remember { mutableStateOf<List<Cocktail>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Stan do obsługi szuflady szczegółów drinka
     var selectedCocktail by remember { mutableStateOf<Cocktail?>(null) }
     var isDrawerOpen by remember { mutableStateOf(false) }
 
-    // Nowy stan dla filtra alkoholowego
     var isAlcoholic by remember { mutableStateOf<Boolean?>(null) }
 
-    // Pobieranie drinków po literze
     var selectedLetter by rememberSaveable { mutableStateOf('A') }
 
     LaunchedEffect(selectedLetter, isAlcoholic) {
@@ -58,14 +51,13 @@ fun ExploreScreen(
             val response = ApiClient.api.getCocktailsByLetter(selectedLetter.toString())
             var allCocktails = response.drinks ?: emptyList()
 
-            // Filtrowanie drinków na podstawie wybranego filtra alkoholowego
             if (isAlcoholic != null) {
                 allCocktails = allCocktails.filter { it.isAlcoholic() == isAlcoholic }
             }
 
             cocktails = allCocktails
         } catch (e: Exception) {
-            errorMessage = "Błąd pobierania drinków"
+            errorMessage = "Error with downloading drink"
             cocktails = emptyList()
         } finally {
             isLoading = false
@@ -80,7 +72,6 @@ fun ExploreScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Pasek liter
             Row(
                 modifier = Modifier
                     .horizontalScroll(scrollState)
@@ -109,31 +100,27 @@ fun ExploreScreen(
                 }
             }
 
-            // Dodajemy filtry alkoholowe
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Przycisk "Alkoholowe"
                 FilterChip(
                     selected = isAlcoholic == true,
                     onClick = { isAlcoholic = if (isAlcoholic == true) null else true },
-                    label = { Text("Alkoholowe") },
+                    label = { Text("Alcoholic") },
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
 
-                // Przycisk "Bezalkoholowe"
                 FilterChip(
                     selected = isAlcoholic == false,
                     onClick = { isAlcoholic = if (isAlcoholic == false) null else false },
-                    label = { Text("Bezalkoholowe") },
+                    label = { Text("Non-alcoholic") },
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
 
-            // Wyświetlanie drinków
             Box(modifier = Modifier.fillMaxSize()) {
                 when {
                     isLoading -> {
@@ -162,7 +149,7 @@ fun ExploreScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Brak drinków dla tej litery.",
+                                text = "Nothing found",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
@@ -184,7 +171,6 @@ fun ExploreScreen(
                                             isDrawerOpen = true
                                         }
                                 ) {
-                                    // Zaktualizowany układ karty, zgodny z FindScreen
                                     Column(
                                         modifier = Modifier
                                             .fillMaxSize()
@@ -233,9 +219,7 @@ fun ExploreScreen(
             }
         }
     }
-    
-    // Szuflada ze szczegółami drinka umieszczona poza głównym układem,
-    // dzięki czemu nakłada się na cały ekran, łącznie z paskami
+
     if (selectedCocktail != null) {
         DetailedDrinkDrawer(
             cocktail = selectedCocktail,
@@ -243,8 +227,8 @@ fun ExploreScreen(
             onClose = { isDrawerOpen = false },
             onPrepareNow = { time ->
                 onPrepareTimeChange(time)
-                onTabSelected(1) // Przejdź do zakładki Countdown
-                isDrawerOpen = false // Zamknij szufladę
+                onTabSelected(1)
+                isDrawerOpen = false
             }
         )
     }

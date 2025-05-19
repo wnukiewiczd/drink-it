@@ -1,6 +1,5 @@
 package com.example.drinkit.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -14,20 +13,20 @@ import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
     primary = Blue80,
-    secondary = SecondaryBlueDark,  // zaktualizowany secondary - turkusowy
+    secondary = SecondaryBlueDark,
     tertiary = BlueAccent80,
     onPrimary = Color.White,
-    onSecondary = OnSecondaryDark,  // zaktualizowany na czarny dla wysokiego kontrastu
+    onSecondary = OnSecondaryDark,
     background = DarkBackground,
     onBackground = DarkOnBackground
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Blue80,
-    secondary = SecondaryBlue,     // zaktualizowany secondary - turkusowy
+    secondary = SecondaryBlue,
     tertiary = BlueAccent80,
     onPrimary = Color.White,
-    onSecondary = OnSecondaryLight,  // zaktualizowany na czarny dla wysokiego kontrastu
+    onSecondary = OnSecondaryLight,
     background = Color.White,
     onBackground = Navy
 )
