@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.ButtonDefaults
@@ -30,13 +31,16 @@ import kotlinx.coroutines.flow.filter
 
 @Composable
 fun CountdownScreen(initialTime: Int = 0) {
-    var hours by remember { mutableStateOf(0) }
-    var minutes by remember { mutableStateOf(0) }
-    var seconds by remember { mutableStateOf(0) }
-    var timeInSeconds by remember { mutableStateOf(0) }
-    var isRunning by remember { mutableStateOf(false) }
-    var isFinished by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(initialTime == 0) } // Dodany stan
+    // Zapisujemy czy to jest pierwsze uruchomienie komponentu
+    var isFirstRun by rememberSaveable { mutableStateOf(true) }
+    
+    var hours by rememberSaveable { mutableStateOf(0) }
+    var minutes by rememberSaveable { mutableStateOf(0) }
+    var seconds by rememberSaveable { mutableStateOf(0) }
+    var timeInSeconds by rememberSaveable { mutableStateOf(0) }
+    var isRunning by rememberSaveable { mutableStateOf(false) }
+    var isFinished by rememberSaveable { mutableStateOf(false) }
+    var showTimePicker by rememberSaveable { mutableStateOf(initialTime == 0) }
 
     val hoursState = rememberLazyListState(initialFirstVisibleItemIndex = hours)
     val minutesState = rememberLazyListState(initialFirstVisibleItemIndex = minutes)
@@ -50,16 +54,17 @@ fun CountdownScreen(initialTime: Int = 0) {
         }
     }
 
-    // Ustaw poczatkowy czas
-    LaunchedEffect(initialTime) {
-        if (initialTime > 0) {
-            hours = initialTime / 3600
-            minutes = (initialTime % 3600) / 60
-            seconds = initialTime % 60
-            timeInSeconds = initialTime
-            showTimePicker = false // Ukryj TimePickerSection, gdy initialTime > 0
-        } else {
-            showTimePicker = true // Pokaż TimePickerSection, gdy initialTime == 0
+    // Ustaw poczatkowy czas tylko przy pierwszym uruchomieniu
+    LaunchedEffect(key1 = "initialization") {
+        if (isFirstRun) {
+            if (initialTime > 0) {
+                hours = initialTime / 3600
+                minutes = (initialTime % 3600) / 60
+                seconds = initialTime % 60
+                timeInSeconds = initialTime
+                showTimePicker = false
+            }
+            isFirstRun = false
         }
     }
 
