@@ -47,17 +47,28 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
                 ThemeMode.SYSTEM -> isSystemDark
             }
+            
+            // Dodanie stanu dla ekranu startowego
+            var showSplashScreen by remember { mutableStateOf(true) }
+            
             DrinkItTheme(
                 darkTheme = darkTheme,
                 dynamicColor = false
             ) {
-                AppNavigation(
-                    themeMode = themeMode,
-                    onThemeChange = {
-                        themeMode = it
-                        saveThemeMode(this, it)
-                    }
-                )
+                // Wyświetlenie ekranu animacji startowej lub głównego interfejsu
+                if (showSplashScreen) {
+                    SplashScreen(onAnimationFinished = {
+                        showSplashScreen = false
+                    })
+                } else {
+                    AppNavigation(
+                        themeMode = themeMode,
+                        onThemeChange = {
+                            themeMode = it
+                            saveThemeMode(this, it)
+                        }
+                    )
+                }
             }
         }
     }
