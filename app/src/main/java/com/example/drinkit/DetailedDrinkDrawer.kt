@@ -44,7 +44,8 @@ import kotlinx.coroutines.launch
 fun DetailedDrinkDrawer(
     cocktail: Cocktail?,
     isOpen: Boolean,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onPrepareNow: (Int) -> Unit // Dodana akcja
 ) {
     if (cocktail == null) return
 
@@ -373,6 +374,17 @@ fun DetailedDrinkDrawer(
                             textAlign = TextAlign.Start
                         )
                         Spacer(modifier = Modifier.height(16.dp))
+
+                        // Prepare now button
+                        Button(
+                            onClick = { onPrepareNow(prepareTime) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Prepare Now")
+                        }
                     }
                 }
             }

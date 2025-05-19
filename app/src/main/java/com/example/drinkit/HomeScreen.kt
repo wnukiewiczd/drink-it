@@ -29,7 +29,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     onExploreClick: () -> Unit,
-    onFindClick: () -> Unit
+    onFindClick: () -> Unit,
+    onPrepareTimeChange: (Int) -> Unit, // Dodana funkcja
+    onTabSelected: (Int) -> Unit // Dodana funkcja
 ) {
     // Stan dla losowego drinka
     var randomCocktail by remember { mutableStateOf<Cocktail?>(null) }
@@ -172,7 +174,12 @@ fun HomeScreen(
         DetailedDrinkDrawer(
             cocktail = randomCocktail,
             isOpen = isDrawerOpen,
-            onClose = { isDrawerOpen = false }
+            onClose = { isDrawerOpen = false },
+            onPrepareNow = { time ->
+                onPrepareTimeChange(time)
+                onTabSelected(1) // Przejdź do zakładki Countdown
+                isDrawerOpen = false // Zamknij szufladę
+            }
         )
     }
 }

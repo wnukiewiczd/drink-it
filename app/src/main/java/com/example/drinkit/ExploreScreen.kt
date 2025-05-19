@@ -29,7 +29,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun ExploreScreen(
     selectedLetter: Char,
-    onLetterSelected: (Char) -> Unit
+    onLetterSelected: (Char) -> Unit,
+    onPrepareTimeChange: (Int) -> Unit, // Dodana funkcja
+    onTabSelected: (Int) -> Unit // Dodana funkcja
 ) {
     val letters = ('A'..'Z').toList()
     val scrollState = rememberScrollState()
@@ -203,7 +205,12 @@ fun ExploreScreen(
         DetailedDrinkDrawer(
             cocktail = selectedCocktail,
             isOpen = isDrawerOpen,
-            onClose = { isDrawerOpen = false }
+            onClose = { isDrawerOpen = false },
+            onPrepareNow = { time ->
+                onPrepareTimeChange(time)
+                onTabSelected(1) // Przejdź do zakładki Countdown
+                isDrawerOpen = false // Zamknij szufladę
+            }
         )
     }
 }

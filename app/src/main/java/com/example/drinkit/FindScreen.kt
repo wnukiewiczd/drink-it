@@ -35,7 +35,11 @@ import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
 
 @Composable
-fun FindScreen(resetSignal: Int) {
+fun FindScreen(
+    resetSignal: Int,
+    onPrepareTimeChange: (Int) -> Unit,
+    onTabSelected: (Int) -> Unit
+) {
     var query by remember { mutableStateOf(TextFieldValue("")) }
     var searching by remember { mutableStateOf(false) }
     var cocktails by remember { mutableStateOf<List<Cocktail>>(emptyList()) }
@@ -274,7 +278,12 @@ fun FindScreen(resetSignal: Int) {
         DetailedDrinkDrawer(
             cocktail = selectedCocktail,
             isOpen = isDrawerOpen,
-            onClose = { isDrawerOpen = false }
+            onClose = { isDrawerOpen = false },
+            onPrepareNow = { time ->
+                onPrepareTimeChange(time)
+                onTabSelected(1)
+                isDrawerOpen = false
+            }
         )
     }
 }

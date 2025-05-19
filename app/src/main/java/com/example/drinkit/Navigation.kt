@@ -115,6 +115,17 @@ fun AppNavigation(
     var isDetailedDrawerOpen by remember { mutableStateOf(false) }
     var isLoadingFavouriteDetails by remember { mutableStateOf(false) }
 
+    // Stan dla czasu przygotowania
+    var prepareTime by remember { mutableStateOf(0) }
+
+    // Funkcja do zmiany zakładki
+    val switchTab: (Int) -> Unit = { page ->
+        scope.launch { pagerState.animateScrollToPage(page) }
+        if (items[page] == "Find") {
+            findScreenResetSignal++
+        }
+    }
+
     // Zamykaj detailed drawer przy każdej zmianie zakładki
     LaunchedEffect(pagerState.currentPage) {
         isDetailedDrawerOpen = false
@@ -188,16 +199,24 @@ fun AppNavigation(
                                         onThemeChange?.invoke(it)
                                     }
                                 )
-                                "Countdown" -> CountdownScreen()
+                                "Countdown" -> CountdownScreen(initialTime = prepareTime)
                                 "Home" -> HomeScreen(
                                     onExploreClick = { onTabSelected(3) },
-                                    onFindClick = { onTabSelected(4) }
+                                    onFindClick = { onTabSelected(4) },
+                                    onPrepareTimeChange = { time -> prepareTime = time },
+                                    onTabSelected = { switchTab(it) }
                                 )
                                 "Explore" -> ExploreScreen(
                                     selectedLetter = selectedLetter,
-                                    onLetterSelected = { selectedLetter = it }
+                                    onLetterSelected = { selectedLetter = it },
+                                    onPrepareTimeChange = { time -> prepareTime = time },
+                                    onTabSelected = { switchTab(it) }
                                 )
-                                "Find" -> FindScreen(resetSignal = findScreenResetSignal)
+                                "Find" -> FindScreen(
+                                    resetSignal = findScreenResetSignal,
+                                    onPrepareTimeChange = { time -> prepareTime = time },
+                                    onTabSelected = { switchTab(it) }
+                                )
                             }
                         }
                     }
@@ -206,7 +225,12 @@ fun AppNavigation(
                         DetailedDrinkDrawer(
                             cocktail = selectedFavouriteDrink,
                             isOpen = isDetailedDrawerOpen,
-                            onClose = { isDetailedDrawerOpen = false }
+                            onClose = { isDetailedDrawerOpen = false },
+                            onPrepareNow = { time ->
+                                prepareTime = time
+                                isDetailedDrawerOpen = false
+                                switchTab(1) // Przejdź do zakładki Countdown
+                            }
                         )
                     }
                 }

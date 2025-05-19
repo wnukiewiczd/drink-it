@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
 @Composable
-fun CountdownScreen() {
+fun CountdownScreen(initialTime: Int = 0) {
     var hours by remember { mutableStateOf(0) }
     var minutes by remember { mutableStateOf(0) }
     var seconds by remember { mutableStateOf(0) }
@@ -46,6 +46,16 @@ fun CountdownScreen() {
     LaunchedEffect(hours, minutes, seconds) {
         if (!isRunning && !isFinished) {
             timeInSeconds = hours * 3600 + minutes * 60 + seconds
+        }
+    }
+
+    // Ustaw poczatkowy czas
+    LaunchedEffect(initialTime) {
+        if (initialTime > 0) {
+            hours = initialTime / 3600
+            minutes = (initialTime % 3600) / 60
+            seconds = initialTime % 60
+            timeInSeconds = initialTime
         }
     }
 
