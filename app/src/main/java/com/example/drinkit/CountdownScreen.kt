@@ -24,10 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import androidx.activity.ComponentActivity
-import androidx.compose.ui.platform.LocalContext
 
-// --- ViewModel ---
 class CountdownViewModel : ViewModel() {
     var hours by mutableStateOf(0)
     var minutes by mutableStateOf(0)
@@ -40,7 +37,6 @@ class CountdownViewModel : ViewModel() {
     var initialTime by mutableStateOf(0)
     var initialized by mutableStateOf(false)
 
-    // Zmieniono nazwę metody, aby uniknąć konfliktu z setterem
     fun applyInitialTime(newTime: Int) {
         if (newTime > 0) {
             hours = newTime / 3600
@@ -77,23 +73,19 @@ class CountdownViewModel : ViewModel() {
 
 @Composable
 fun CountdownScreen(initialTime: Int = 0) {
-    // Domyślny scoping ViewModelu (do Composable)
     val viewModel: CountdownViewModel = viewModel()
 
-    // --- Picker states ---
     val hoursState = rememberLazyListState(initialFirstVisibleItemIndex = viewModel.hours)
     val minutesState = rememberLazyListState(initialFirstVisibleItemIndex = viewModel.minutes)
     val secondsState = rememberLazyListState(initialFirstVisibleItemIndex = viewModel.seconds)
     val coroutineScope = rememberCoroutineScope()
 
-    // Synchronizuj initialTime z ViewModelem TYLKO jeśli użytkownik nie zaczął odliczania ani nie edytuje czasu
     LaunchedEffect(initialTime) {
         if (viewModel.showTimePicker && (viewModel.initialTime != initialTime || !viewModel.initialized)) {
             viewModel.applyInitialTime(initialTime)
         }
     }
 
-    // Synchronizuj timeInSeconds z licznikami tylko podczas edycji czasu (showTimePicker == true)
     LaunchedEffect(viewModel.hours, viewModel.minutes, viewModel.seconds) {
         if (viewModel.showTimePicker) {
             viewModel.timeInSeconds = viewModel.hours * 3600 + viewModel.minutes * 60 + viewModel.seconds
@@ -101,14 +93,12 @@ fun CountdownScreen(initialTime: Int = 0) {
         }
     }
 
-    // Aktualizacja wyświetlanych wartości gdy zmieni się timeInSeconds (np. podczas odliczania lub po pauzie)
     LaunchedEffect(viewModel.timeInSeconds) {
         if (!viewModel.showTimePicker) {
             viewModel.lastTimeInSeconds = viewModel.timeInSeconds
         }
     }
 
-    // Synchronizuj pickery z wartościami, tylko gdy pokazujemy picker
     LaunchedEffect(viewModel.showTimePicker) {
         if (viewModel.showTimePicker) {
             viewModel.hours = viewModel.timeInSeconds / 3600
@@ -121,7 +111,6 @@ fun CountdownScreen(initialTime: Int = 0) {
         }
     }
 
-    // Synchronizuj wartości z pickerów, gdy użytkownik scrolluje
     LaunchedEffect(hoursState.firstVisibleItemIndex) {
         if (viewModel.showTimePicker) viewModel.hours = hoursState.firstVisibleItemIndex
     }
@@ -300,7 +289,6 @@ private fun TimePickerSection(
     val density = LocalDensity.current
     val itemHeightPx = with(density) { itemHeight.toPx() }
 
-    // Automatyczne centrowanie po zakończeniu scrollowania
     LaunchedEffect(enabled) {
         if (enabled) {
             snapshotFlow { state.isScrollInProgress }
@@ -317,7 +305,7 @@ private fun TimePickerSection(
     }
 
     Box(
-        modifier = Modifier.width(56.dp), // zmniejszona szerokość
+        modifier = Modifier.width(56.dp),
         contentAlignment = Alignment.Center
     ) {
         LazyColumn(
@@ -330,7 +318,7 @@ private fun TimePickerSection(
             horizontalAlignment = Alignment.CenterHorizontally,
             userScrollEnabled = enabled
         ) {
-            items(valueRange.count()) { index: Int -> // dodano typ parametru
+            items(valueRange.count()) { index: Int ->
                 val value = valueRange.first + index
                 Box(
                     modifier = Modifier
@@ -342,7 +330,7 @@ private fun TimePickerSection(
                         text = "%02d".format(value),
                         fontSize = fontSize,
                         color = if (state.firstVisibleItemIndex == index) highlightColor else textColor.copy(alpha = 0.5f),
-                        modifier = Modifier.padding(vertical = 0.dp, horizontal = 0.dp) // brak paddingu
+                        modifier = Modifier.padding(vertical = 0.dp, horizontal = 0.dp)
                     )
                 }
             }

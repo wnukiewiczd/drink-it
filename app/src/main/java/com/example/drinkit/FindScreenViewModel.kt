@@ -20,12 +20,10 @@ class FindScreenViewModel(
     
     var selectedCocktail by mutableStateOf<Cocktail?>(null)
     var isDrawerOpen by mutableStateOf(false)
-    
-    // Przetrzymujemy ostatnią wartość resetSignal, aby nie resetować przy obrotach ekranu
+
     private var lastResetSignal: Int = -1
     
     init {
-        // Odtwarzamy stan wyszukiwania jeśli były wcześniej wyniki
         if (searching && query.text.isNotBlank() && cocktails.isEmpty()) {
             searchCocktails()
         }

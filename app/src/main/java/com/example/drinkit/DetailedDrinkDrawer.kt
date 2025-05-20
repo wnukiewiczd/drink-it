@@ -184,7 +184,6 @@ fun DetailedDrinkDrawer(
                         }
                     )
 
-                    // --- Drink details ---
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -192,7 +191,6 @@ fun DetailedDrinkDrawer(
                             .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Drink image
                         Image(
                             painter = rememberAsyncImagePainter(cocktail.strDrinkThumb),
                             contentDescription = cocktail.strDrink,

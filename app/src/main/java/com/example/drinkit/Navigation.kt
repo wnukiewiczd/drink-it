@@ -108,9 +108,7 @@ fun AppNavigation(
     val pagerState = rememberPagerState(initialPage = 2)
 
     var currentThemeMode by remember { mutableStateOf(themeMode) }
-    var selectedLetter by remember { mutableStateOf('A') }
-    
-    // Przypisujemy findScreenResetSignal do stałego obiektu, który przetrwa rekompozycję
+
     val findScreenResetSignalState = remember { mutableStateOf(0) }
     
     var selectedFavouriteDrink by remember { mutableStateOf<Cocktail?>(null) }
@@ -118,14 +116,12 @@ fun AppNavigation(
     var isLoadingFavouriteDetails by remember { mutableStateOf(false) }
 
     var prepareTime by remember { mutableStateOf(0) }
-    
-    // Zachowaj referencję do FindScreenViewModel
+
     val findScreenViewModel: FindScreenViewModel = viewModel()
 
     val switchTab: (Int) -> Unit = { page ->
         scope.launch { pagerState.animateScrollToPage(page) }
         if (items[page] == "Find") {
-            // Inkrementujemy tylko gdy faktycznie przełączamy na zakładkę Find z innej zakładki
             if (pagerState.currentPage != page) {
                 findScreenResetSignalState.value++
             }
@@ -221,7 +217,7 @@ fun AppNavigation(
                                     resetSignal = findScreenResetSignalState.value,
                                     onPrepareTimeChange = { time -> prepareTime = time },
                                     onTabSelected = { switchTab(it) },
-                                    viewModel = findScreenViewModel  // przekazujemy ten sam ViewModel
+                                    viewModel = findScreenViewModel
                                 )
                             }
                         }

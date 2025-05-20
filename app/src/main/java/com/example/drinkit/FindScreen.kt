@@ -24,7 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,11 +40,8 @@ fun FindScreen(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    
-    // Używamy snapshotFlow by reagować tylko przy faktycznych zmianach resetSignal
-    // a nie przy rekompozycji spowodowanej obrotem ekranu
+
     LaunchedEffect(resetSignal) {
-        // Tylko gdy faktycznie jest to nowy resetSignal (sprawdzane w ViewModel)
         viewModel.handleResetSignal(resetSignal)
         focusManager.clearFocus()
     }
