@@ -195,7 +195,10 @@ fun AppNavigation(
                                         onThemeChange?.invoke(it)
                                     }
                                 )
-                                "Countdown" -> CountdownScreen(initialTime = prepareTime)
+                                "Countdown" -> {
+                                    // Usunięto key(prepareTime), aby nie resetować ViewModelu przy każdej zmianie
+                                    CountdownScreen(initialTime = prepareTime)
+                                }
                                 "Home" -> HomeScreen(
                                     onExploreClick = { onTabSelected(3) },
                                     onFindClick = { onTabSelected(4) },
