@@ -15,6 +15,9 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val PREFS_NAME = "settings"
         private const val PREF_THEME_MODE = "theme_mode"
+        
+        // Dodajemy globalną flagę do śledzenia, czy animacja została już pokazana
+        private var splashAnimationShown = false
     }
 
     private fun saveThemeMode(context: Context, mode: ThemeMode) {
@@ -45,7 +48,8 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.SYSTEM -> isSystemDark
             }
 
-            var showSplashScreen by remember { mutableStateOf(true) }
+            // Używamy globalnej flagi zamiast lokalnego stanu
+            var showSplashScreen by remember { mutableStateOf(!splashAnimationShown) }
             
             DrinkItTheme(
                 darkTheme = darkTheme,
@@ -54,6 +58,8 @@ class MainActivity : ComponentActivity() {
                 if (showSplashScreen) {
                     SplashScreen(onAnimationFinished = {
                         showSplashScreen = false
+                        // Ustawiamy globalną flagę, że animacja została pokazana
+                        splashAnimationShown = true
                     })
                 } else {
                     AppNavigation(
