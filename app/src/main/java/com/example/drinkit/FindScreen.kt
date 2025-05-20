@@ -28,70 +28,41 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.launch
 
 @Composable
 fun FindScreen(
     resetSignal: Int,
     onPrepareTimeChange: (Int) -> Unit,
-    onTabSelected: (Int) -> Unit
+    onTabSelected: (Int) -> Unit,
+    viewModel: FindScreenViewModel = viewModel()
 ) {
-    var query by remember { mutableStateOf(TextFieldValue("")) }
-    var searching by remember { mutableStateOf(false) }
-    var cocktails by remember { mutableStateOf<List<Cocktail>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val coroutineScope = rememberCoroutineScope()
-
-    var selectedCocktail by remember { mutableStateOf<Cocktail?>(null) }
-    var isDrawerOpen by remember { mutableStateOf(false) }
-
+    
+    // Używamy snapshotFlow by reagować tylko przy faktycznych zmianach resetSignal
+    // a nie przy rekompozycji spowodowanej obrotem ekranu
     LaunchedEffect(resetSignal) {
-        searching = false
-        query = TextFieldValue("")
-        cocktails = emptyList()
-        errorMessage = null
+        // Tylko gdy faktycznie jest to nowy resetSignal (sprawdzane w ViewModel)
+        viewModel.handleResetSignal(resetSignal)
         focusManager.clearFocus()
     }
 
-    fun searchCocktails() {
-        if (query.text.isNotBlank()) {
-            isLoading = true
-            errorMessage = null
-            searching = true
-            keyboardController?.hide()
-            focusManager.clearFocus()
-
-            coroutineScope.launch {
-                try {
-                    val response = ApiClient.api.getCocktailsByName(query.text)
-                    cocktails = response.drinks ?: emptyList()
-                } catch (e: Exception) {
-                    errorMessage = "Error while searching"
-                } finally {
-                    isLoading = false
-                }
-            }
-        }
-    }
-
     val boxWidth by animateDpAsState(
-        targetValue = if (searching) 320.dp else 280.dp,
+        targetValue = if (viewModel.searching) 320.dp else 280.dp,
         animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing), label = ""
     )
     val boxHeight by animateDpAsState(
-        targetValue = if (searching) 56.dp else 80.dp,
+        targetValue = if (viewModel.searching) 56.dp else 80.dp,
         animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing), label = ""
     )
     val boxTopPadding by animateDpAsState(
-        targetValue = if (searching) 32.dp else 0.dp,
+        targetValue = if (viewModel.searching) 32.dp else 0.dp,
         animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing), label = ""
     )
-    val boxVerticalArrangement = if (searching) Arrangement.Top else Arrangement.Center
+    val boxVerticalArrangement = if (viewModel.searching) Arrangement.Top else Arrangement.Center
 
     Box(
         modifier = Modifier
@@ -114,7 +85,7 @@ fun FindScreen(
         ) {
             Spacer(modifier = Modifier.height(boxTopPadding))
 
-            if (!searching) {
+            if (!viewModel.searching) {
                 Text(
                     text = "Find a specific drink",
                     color = MaterialTheme.colorScheme.onBackground,
@@ -140,8 +111,8 @@ fun FindScreen(
                         .padding(horizontal = 16.dp)
                 ) {
                     TextField(
-                        value = query,
-                        onValueChange = { query = it },
+                        value = viewModel.query,
+                        onValueChange = { viewModel.query = it },
                         placeholder = {
                             Text(
                                 "Find a drink...",
@@ -172,8 +143,12 @@ fun FindScreen(
                             .background(MaterialTheme.colorScheme.primary)
                     ) {
                         IconButton(
-                            onClick = { searchCocktails() },
-                            enabled = query.text.isNotBlank(),
+                            onClick = { 
+                                viewModel.searchCocktails()
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+                            },
+                            enabled = viewModel.query.text.isNotBlank(),
                             modifier = Modifier
                                 .fillMaxSize()
                         ) {
@@ -188,21 +163,21 @@ fun FindScreen(
                 }
             }
 
-            if (isLoading) {
+            if (viewModel.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(text = "Loading...", color = MaterialTheme.colorScheme.onBackground)
                 }
-            } else if (errorMessage != null) {
+            } else if (viewModel.errorMessage != null) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
+                    Text(text = viewModel.errorMessage!!, color = MaterialTheme.colorScheme.error)
                 }
-            } else if (cocktails.isEmpty() && searching) {
+            } else if (viewModel.cocktails.isEmpty() && viewModel.searching) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -213,21 +188,20 @@ fun FindScreen(
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
-            } else if (searching) {
+            } else if (viewModel.searching) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(cocktails) { cocktail ->
+                    items(viewModel.cocktails) { cocktail ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(0.85f)
                                 .clickable {
-                                    selectedCocktail = cocktail
-                                    isDrawerOpen = true
+                                    viewModel.openCocktailDetails(cocktail)
                                 }
                         ) {
                             Column(
@@ -277,15 +251,15 @@ fun FindScreen(
         }
     }
 
-    if (selectedCocktail != null) {
+    if (viewModel.selectedCocktail != null) {
         DetailedDrinkDrawer(
-            cocktail = selectedCocktail,
-            isOpen = isDrawerOpen,
-            onClose = { isDrawerOpen = false },
+            cocktail = viewModel.selectedCocktail,
+            isOpen = viewModel.isDrawerOpen,
+            onClose = { viewModel.closeCocktailDetails() },
             onPrepareNow = { time ->
                 onPrepareTimeChange(time)
                 onTabSelected(1)
-                isDrawerOpen = false
+                viewModel.closeCocktailDetails()
             }
         )
     }

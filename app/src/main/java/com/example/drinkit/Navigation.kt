@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -108,18 +109,26 @@ fun AppNavigation(
 
     var currentThemeMode by remember { mutableStateOf(themeMode) }
     var selectedLetter by remember { mutableStateOf('A') }
-    var findScreenResetSignal by remember { mutableStateOf(0) }
-
+    
+    // Przypisujemy findScreenResetSignal do stałego obiektu, który przetrwa rekompozycję
+    val findScreenResetSignalState = remember { mutableStateOf(0) }
+    
     var selectedFavouriteDrink by remember { mutableStateOf<Cocktail?>(null) }
     var isDetailedDrawerOpen by remember { mutableStateOf(false) }
     var isLoadingFavouriteDetails by remember { mutableStateOf(false) }
 
     var prepareTime by remember { mutableStateOf(0) }
+    
+    // Zachowaj referencję do FindScreenViewModel
+    val findScreenViewModel: FindScreenViewModel = viewModel()
 
     val switchTab: (Int) -> Unit = { page ->
         scope.launch { pagerState.animateScrollToPage(page) }
         if (items[page] == "Find") {
-            findScreenResetSignal++
+            // Inkrementujemy tylko gdy faktycznie przełączamy na zakładkę Find z innej zakładki
+            if (pagerState.currentPage != page) {
+                findScreenResetSignalState.value++
+            }
         }
     }
 
@@ -131,7 +140,7 @@ fun AppNavigation(
     val onTabSelected: (Int) -> Unit = { page ->
         scope.launch { pagerState.animateScrollToPage(page) }
         if (items[page] == "Find") {
-            findScreenResetSignal++
+            findScreenResetSignalState.value++
         }
     }
 
@@ -196,7 +205,6 @@ fun AppNavigation(
                                     }
                                 )
                                 "Countdown" -> {
-                                    // Usunięto key(prepareTime), aby nie resetować ViewModelu przy każdej zmianie
                                     CountdownScreen(initialTime = prepareTime)
                                 }
                                 "Home" -> HomeScreen(
@@ -210,9 +218,10 @@ fun AppNavigation(
                                     onTabSelected = { switchTab(it) }
                                 )
                                 "Find" -> FindScreen(
-                                    resetSignal = findScreenResetSignal,
+                                    resetSignal = findScreenResetSignalState.value,
                                     onPrepareTimeChange = { time -> prepareTime = time },
-                                    onTabSelected = { switchTab(it) }
+                                    onTabSelected = { switchTab(it) },
+                                    viewModel = findScreenViewModel  // przekazujemy ten sam ViewModel
                                 )
                             }
                         }
